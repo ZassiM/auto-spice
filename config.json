@@ -1,5 +1,5 @@
 {
-    "xbar_sizes": {
+    "xbar_size": {
         "rows" : 1,
         "columns": 1
     },
@@ -15,6 +15,9 @@
         "type" : "tran",
         "stop_time" : "10u",
         "max_step" : "1u",
-        "model_file": "JART_VCM_v1b.va"
+        "model_file": "JART_VCM_v1b.va",
+        "read_v": 0.2,
+        "set_v": -1.05,
+        "reset_v": 0.75
     }
 }

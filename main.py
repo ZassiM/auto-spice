@@ -26,12 +26,14 @@ static_param = {"eps": 17,"epsphib":5.5,"phibn0":0.18, "phin":0.1,"un":4e-06,
 	        'epsphib_eff': "(epsphib)*(8.85419e-12)"}
 
 params_read = 0 # number of parameters read on the csv format file
-volt_r, volt_c = [], [] # 
+volt_r, volt_c = [], [] # manual pulses
+
+read_v, set_v, reset_v = 0,0,0
 
 with open('config.json', 'r') as f:
 	config = json.load(f)
 
-	rows, columns = config['xbar_sizes']['rows'], config['xbar_sizes']['columns']	# read rows and columns
+	rows, columns = config['xbar_size']['rows'], config['xbar_size']['columns']	# read rows and columns
 
 	nmin_b, nmax_b, ldet_b, rdet_b = config['var_bools']['ndiscmin'], config['var_bools']['ndiscmax'], config['var_bools']['ldet'], config['var_bools']['rdet']	# create dict with variability params bools
 
@@ -39,6 +41,10 @@ with open('config.json', 'r') as f:
 
 	model_path += config['sim_params']['model_file']
 
+	read_v, set_v, reset_v = config['sim_params']['read_v'], config['sim_params']['set_v'], config['sim_params']['reset_v']
+
+
+'''
 pulses = pd.read_csv('pulses.csv',skip_blank_lines=False)
 
 pulses_list = pulses.values.tolist()
@@ -51,22 +57,37 @@ for r in pulses_list:
 		volt_r.append(r)
 	else:
 		volt_c.append(r)
+'''
+
+#check if single memristor or xbar to read appropriate csv file
+if rows>1 or columns>1: #xbar
+	pulses = pd.read_csv('pulses_xbar.csv',skip_blank_lines=False)
+
+	#...to do
+
+else: #single memristor (rows=columns=1)
+	pulses = pd.read_csv('pulses_single.csv')
+	pulses_list = pulses.values.tolist()
 
 
-cross_bar = ckt.set_cross_bar_params(rows, columns)	# set xbar size
+print(pulses)
 
-ckt.set_input_voltages(volt_r, volt_c)	# set input voltages using the list read by the file
 
-#ckt.create_set_reset_pulses(-0.75, 1.5, 0.2)	# parameters: set, reset, read voltages
 
-var_bools = ckt.set_variablity(Nmin = nmin_b, Nmax = nmax_b, ldet = ldet_b, rdet = rdet_b)	# creates a dict for checking if the variabilities for each parameters are set
+# cross_bar = ckt.set_cross_bar_params(rows, columns)	# set xbar size
 
-var_param = ckt.update_param(static_param_sim, mean_sigma, var_bools)	# update the parameters of the memristors in case the var_bools are set
+# ckt.set_input_voltages(volt_r, volt_c)	# set input voltages using the list read by the file
 
-netlist = ckt.design_ckt(var_param, static_param)	# create spectre netlist using the parameters set before and the static and variab parameters
+# #ckt.create_set_reset_pulses(-0.75, 1.5, 0.2)	# parameters: set, reset, read voltages
 
-ckt.set_simulation_params(sim_type, stop_time, max_step) # tune the simulator
+# var_bools = ckt.set_variablity(Nmin = nmin_b, Nmax = nmax_b, ldet = ldet_b, rdet = rdet_b)	# creates a dict for checking if the variabilities for each parameters are set
 
-ckt.write_into_file(out_file_name, model_path, netlist)	# write the netlist and the sim configutation into the scs file 
+# var_param = ckt.update_param(static_param_sim, mean_sigma, var_bools)	# update the parameters of the memristors in case the var_bools are set
+
+# netlist = ckt.design_ckt(var_param, static_param)	# create spectre netlist using the parameters set before and the static and variab parameters
+
+# ckt.set_simulation_params(sim_type, stop_time, max_step) # tune the simulator
+
+# ckt.write_into_file(out_file_name, model_path, netlist)	# write the netlist and the sim configutation into the scs file 
  
 

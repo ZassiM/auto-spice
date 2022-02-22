@@ -1,37 +1,47 @@
-parameters  eps = 17 epsphib = 5.5 Ndiscmin=0.008
+* Read - Set - Read - Reset - Read
 global 0
+ahdl_include "/net/home/zahr/Documents/Gitlab/auto-spice/deps/JART-memristor-models/JART_VCM_v1b.va"
 
 subckt my_ckt r0 c0 
-I0 (r0 c0) JART_VCM_1b_det T0=0.293 eps=17 epsphib=5.5 phiBn0=0.18 \
+I0 (r0 c0) JART_VCM_1b_det T0=0.293 \
+eps=17 epsphib=5.5 phiBn0=0.18 \
 phin=0.1 un=4e-06 Ndiscmax=20 Ndiscmin=0.008 Ninit=0.008 Nplug=20 \
 a=2.5e-10 ny0=2e+13 dWa=1.35 Rth0=10e6 rdet=45e-9 lcell=3 \
 ldet=0.4 Rtheff_scaling=0.27 RseriesTiOx=650 R0=719.244 \
 Rthline=90471.5 alphaline=0.00392
 ends my_ckt
 XBAR (r0 c0 ) my_ckt
-V0 (r0 0) vsource type=pwl wave=[ 0 0 0.9 0 1 0.2 1.9 0.2 2 0 2.9 0 3 -0.75 3.9 -0.75 4 0 4.9 0 5 0.2 5.9 0.2 6 0 6.9 0 7 1.5 7.9 1.5 8 0 8.9 0 9 0.2 9.9 0.2 10 0 11 0]
-V0 (r0 0) vsource type=pwl wave=[ 0m 0 0.9m 0 1m 0.2 1.9m 0.2 2m 0 2.9m 0 3m -0.75 3.9m -0.75 4m 0 4.9m 0 5m 0.2 5.9m 0.2 6m 0 6.9m 0 7m 1.5 7.9m 1.5 8m 0 8.9m 0 9m 0.2 9.9m 0.2 10m 0 11m 0]
-V0 (r0 0) vsource type=pwl wave=[ 0 0 90u 0 100u 0.2 190u 0.2 200u 0 290u 0 300u -0.75 390u -0.75 400u 0 490u 0 500u 0.2 590u 0.2 600u 0 690u 0 700u 1.5 790u 1.5 800u 0 890u 0 900u 0.2 990u 0.2 1000u 0 1100u 0]
-V1 (r0 0) vsource type=pulse val0=0.2 val1=-0.75 delay=1 rise=0.05n fall=0.05n width=1 period=4
-V1 (c0 0) vsource dc=0
 
+* triangle
+* V0 (r0 0) vsource type=pwl wave=[ 0 0 1.5 -1.5 3 0 4.5 1.5 6 0 ]
+* V0 (c0 0) vsource type=pwl wave=[ 0 0 1.5ms -0.7 3ms 0 4.5ms 1.6 6ms 0 ]
 
- save XBAR.I0:OE XBAR.I0:AE
-ahdl_include "/net/home/zahr/Documents/Gitlab/auto-spice/deps/JART-memristor-models/JART_VCM_v1b.va"
-simulatorOptions options vabstol=1e-6 iabstol=1e-12 temp=27 tnom=27 gmin=1e-12 
-trans tran stop=11 errpreset=conservative maxstep=1e-3
-saveOptions options save=all currents=all saveahdlvars=all
+* zahr set/reset
+* V0 (AE 0) vsource type=pwl wave=[ 0 0 0.9 0 1 0.2 1.9 0.2 2 0 2.9 0 3 -0.75 3.9 -0.75 4 0 4.9 0 5 0.2 5.9 0.2 6 0 6.9 0 7 1.5 7.9 1.5 8 0 8.9 0 9 0.2 9.9 0.2 10 0 11 0]
 
+*pwl
+V0 (r0 0) vsource type=pwl wave=[\
+0      0    \
+999n   0    \
+1000n  0.2  \
+1999n  0.2  \
+2000n  0    \
+2999n  0    \
+3000n -1.05 \
+4000n -1.05 \
+4001n  0    \
+4999n  0    \
+5000n  0.2  \
+5999n  0.2  \
+6000n  0    \
+]
+V1 (c0  0) vsource dc=0
 
+save XBAR.I0:OE XBAR.I0:AE
 
+* srjt V0 (r0  0) vsource type=pulse val0=-1.4 val1=1.2 period=200n width=50n rise=25n fall=25n 
+* zahr V0 (r0 0) vsource type=pwl wave=[ 0 0 0.9 0 1 0.2 1.9 0.2 2 0 2.9 0 3 -0.75 3.9 -0.75 4 0 4.9 0 5 0.2 5.9 0.2 6 0 6.9 0 7 1.5 7.9 1.5 8 0 8.9 0 9 0.2 9.9 0.2 10 0 11 0]
 
-
-
-
-
-
-
-
-
-
-
+simulatorOptions options vabstol=1e-6 iabstol=1e-12 temp=27 tnom=27 gmin=1e-12
+trans tran stop=7u errpreset=conservative maxstep=1e-9
+saveOptions options save=all currents=all

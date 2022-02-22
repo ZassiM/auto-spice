@@ -65,16 +65,12 @@ class netlist_design(parameters):
 	
 
 	def design_ckt (self, variables = "", static_param= {}, ckt_name= "my_ckt"):
-		""" 
-			Design the ckt based on the given parameter
-
-			input : variables   -> all the d_to_d variable string
-					with_paramt -> All the static parameters
-					ckt_name    -> Name of subcircuit  ->
-
-			output:  -> creates a complete spectre netlist and return 
-
-		"""
+		'''
+		Three parts:
+		1) Global params, sim params, simul options
+		2) Circuit instances
+		3) Pulses
+		'''
 		print("Generating netlist...\n")
 		device_parameter_including_variablity = {}
 		instance = ""
@@ -131,4 +127,22 @@ class netlist_design(parameters):
 
 		print(f"Netlist, model path and simulation parameters written to \"{file_name}\"\n")
 		
-	
+	def design_ckt_single (self, variables = "", static_param= {}, ckt_name= "my_ckt", pulses = []):
+		'''
+		Three parts:
+		1) Global params, sim params, simul options
+		2) Circuit instances
+		3) Pulses
+		'''
+		print("Generating netlist...\n")
+		str_param = ""
+		str_ckt = ""
+		str_pulses = ""
+		
+
+		# all combined into single string
+		print(f"Netlist generated with {self.rows * self.columns} instances.\n")
+		return output_data + voltages_name +"\n" + instance + end_ckt + subckt_instance + voltage_source + "\n save " +all_current + "\n" 
+
+
+		
