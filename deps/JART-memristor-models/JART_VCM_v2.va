@@ -1,0 +1,193 @@
+// JART VCM2 compact model
+// This model has been published in the following paper
+// [1] C. La Torre, A. F. Zurhelle, T. Breuer, R. Waser, S. Menzel
+// "Compact Modeling of Complementary Switching in Oxide-Based ReRAM Devices"
+// IEEE Transactions on Electron Devices, vol. 66, no. 3, pp. 1268-1275, 2019 
+// doi:10.1109/TED.2019.2892997
+// In this model, the equations of [1] are referenced and the nomenclature of [1] is used
+// If this model is used for publications it should be referenced in the form:
+// The simulations were performed using the JART VCM v2 model [1]. The simulation parameters are given in table xx.
+
+// Last updated on 17.02.2020 
+// For inquires please contact jart@iwe.rwth-aachen.de
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+module JART_VCM_2( electrode1, electrode2 );
+
+	inout electrode1,electrode2;
+	electrical slopeNreal,electrode1,electrode2,gnd,rseries,schottky1,center,schottky2,ion,trackNreal;
+	ground gnd;
+
+// physical constants do not change!
+	localparam e 	= 1.602e-19; 								// elementary charge [C]
+	localparam kb	= 1.3807e-23;								// Boltzman's constant  [VAs/K]		
+	localparam T0 	= 293;										// ambient temperature [K] 
+	localparam Arichardson  = 6.01e5;								// Richardson's constant [A/m^2K^2] 
+	localparam pi 		  = 3.1416; 								// Pi
+	localparam mdiel		  = 9.10938e-31;			  				// electron rest mass [kg]
+	localparam h		  	  = 6.626e-34; 							// Planck's constant [Js]
+	localparam zvo		  = 2;									// oxygen vacancy charge number
+	localparam eps_0	= 8.854e-12;				      				// vacuum permittivity [As/Vm]
+
+// fitting parameters
+	parameter real lcell	= 10 from[5:15];							// length of the cell region [nm]
+	parameter real l1 	= 5 from [1:14];							// length of the region 1 [nm]
+	parameter real l2 	= 5 from [1:14];							// length of the region 2 [nm]
+	parameter real rfil = 130e-9 from [50e-9:200e-9];				// radius of the filament [m]
+	parameter real a	= 0.5e-9 from [0.2e-9:0.8e-9];				// ion hopping distance [m]
+	parameter real ny0	= 4e12 from [1e10:1e13];					// attempt frequenzy [Hz]
+	parameter real dWa	= 0.9 from [0.8:1.2];						// potential barrier fpr the  [eV]
+	parameter real eps	= 17 from [10:25]; 						// static hafnium oxide permittivity 
+	parameter real epsphib	  =  5.5;							// hafnium oxide permittivity related to image force barrier lowering
+	parameter real phiBn01 	= 0.35 from [0:0.7];					// nominal schottky barrier height [eV]
+	parameter real phiBn02 	= 0.35 from [0:0.7];					// nominal schottky barrier height [eV]
+	parameter real un0	= 3e-5 from [1e-6:1e-4];					// electron mobility [m^2/Vs]
+	parameter real Rtheff = 8.7e5 from [1e5:20e6];					// thermal resistance of the Hafnium Oxide [K/W]
+	parameter real dEac = 0.04;									//  electron activation energy [eV]
+	parameter real Rseries0 = 500 from [100:2000];		 			// series resistance [Ohm]
+	parameter real alphaTseries = 4e-3 from [1e-3:1e-2];		 	// temperature coefficient [1/K]
+	parameter real Nmax	= 50 from [1:100];						// maximum oxygen vacancy concentration in the [10^26/m^3]
+	parameter real Ninit1 = 17	from [0.0001:100];				// initial oxygen vacancy concentration in region 1 [10^26/m^3]
+	parameter real Ninit2 = 0.07	from [0.0001:100];				// initial oxygen vacancy concentration in region 2 [10^26/m^3]
+	// Nmin is calculated below
+
+	real A,E_ion,Nmin1,Nmin2,Ischottkytunnel1,Ischottkytunnel2,Treal,dNdx,Nreal,dN1dt,dN2dt,N1,N2,gamma,Rseries,Rregion1,Rregion2,eps_eff,epsphib_eff,psi1,psi2,phin1,phin2,phiBn1,phiBn2,W001,W002,W01,W02,xi1,xi2,Flimit,C;
+
+analog 
+	begin
+
+// force small time steps during abrupt switching
+V(trackNreal,gnd)<+Nreal/1e27;
+V(slopeNreal,gnd)<+ddt(V(trackNreal,gnd))/1e7;
+if ((abs(V(slopeNreal,gnd))>1e-3))
+	begin
+		$bound_step(1e-9);
+		$monitor("Simulation time %r" , $abstime );
+	end
+
+////////////////////////////////////////////////////////
+// auxiliary variables							   //
+////////////////////////////////////////////////////////
+
+eps_eff=eps*eps_0; // static hafnium oxide permittivity 
+epsphib_eff=epsphib*eps_0; // hafnium oxide permittivity related to image force barrier lowering
+A =pi*pow(rfil,2); // cross sectional filament area
+
+
+////////////////////////////////////////////////////////
+// equivalent circuit diagramm 					   //
+////////////////////////////////////////////////////////
+
+// local temperature in the filament
+Treal=((V(schottky1,center)+V(center,schottky2))*I(schottky1,center)*Rtheff+T0)/1000; // Equation 9
+
+// Schottkydiode 1
+if (V(schottky1,rseries)<phiBn01-phin1)
+	begin
+		psi1=phiBn01-phin1-V(rseries,schottky1);
+		phiBn1=phiBn01-sqrt(sqrt(pow(e,3)*zvo*N1*1e26*psi1/(8*pow(pi,2)*(pow(epsphib_eff,3)))));	// Equation 11
+		if (phiBn1<0)
+			begin	
+				phiBn1=0;
+			end
+	end			
+else
+	begin		
+		psi1=0;
+		phiBn1=phiBn01;	
+	end		
+
+// Schottkydiode 2
+if (V(electrode2,schottky2)<phiBn02-phin2)
+	begin
+		psi2=phiBn02-phin2-V(electrode2,schottky2);
+		phiBn2=phiBn02-sqrt(sqrt(pow(e,3)*zvo*N2*1e26*psi2/(8*pow(pi,2)*(pow(epsphib_eff,3)))));	// Equation 11
+		if (phiBn2<0)
+			begin	
+				phiBn2=0;
+			end
+	end			
+else
+	begin		
+		psi2=0;
+		phiBn2=phiBn02;	
+	end		
+
+if (V(electrode1,electrode2)<0) // Schottky 1 Thermionic Field Emission, Schottky 2 Thermal Emission
+	begin
+		W001=(e*h/(4*pi))*sqrt(zvo*N1*1e26/(mdiel*eps_eff));  // Equation 14
+		W01=W001/tanh(W001/(kb*1000*Treal));			// Equation 15
+		xi1=W001/(W001/(kb*Treal*1000)-tanh(W001/(kb*Treal*1000)));  // Equation 16
+
+		Ischottkytunnel2= -A*Arichardson*pow(1000*Treal,2)*exp(-phiBn2*e/(kb*1000*Treal))*(exp(e/(kb*Treal*1000)*V(electrode2,schottky2))-1); // Equation 10
+		I(schottky2,electrode2)<+Ischottkytunnel2;
+
+		Ischottkytunnel1=(-A*Arichardson*Treal*1000/kb)*sqrt(pi*W001*e*(abs(V(rseries,schottky1))+phiBn1/pow(cosh(W001/(kb*Treal*1000)),2)))*exp(-e*phiBn1/W01)*(exp(-e*V(rseries,schottky1)/xi1)-1);  // Equation 13
+		I(rseries,schottky1) <+ Ischottkytunnel1;
+	end
+else		// Schottky 1 Thermal Emission, Schottky 2 Thermionic Field Emission
+	begin	
+		W002=(e*h/(4*pi))*sqrt(zvo*N2*1e26/(mdiel*eps_eff));  // Equation 14
+		W02=W002/tanh(W002/(kb*1000*Treal));			// Equation 15
+		xi2=W002/(W002/(kb*Treal*1000)-tanh(W002/(kb*Treal*1000)));  // Equation 16
+
+		Ischottkytunnel1= A*Arichardson*pow(1000*Treal,2)*exp(-phiBn1*e/(kb*1000*Treal))*(exp(e/(kb*Treal*1000)*V(rseries,schottky1))-1); // Equation 10
+		I(rseries,schottky1)<+Ischottkytunnel1;
+
+		Ischottkytunnel2=(A*Arichardson*Treal*1000/kb)*sqrt(pi*W002*e*(abs(V(electrode2,schottky2))+phiBn2/pow(cosh(W002/(kb*Treal*1000)),2)))*exp(-e*phiBn2/W02)*(exp(-e*V(electrode2,schottky2)/xi2)-1);  // Equation 13
+		I(schottky2,electrode2) <+ Ischottkytunnel2;
+	end
+
+//Region 1 Resistance
+Rregion1=l1*1e-9/(e*zvo*N1*1e26*un0*A)*exp(dEac*e/(kb*Treal*1000)); // Equation 17
+V(schottky1,center)<+Rregion1*I(schottky1,center); 
+
+//Region 2 Resistance 
+Rregion2=l2*1e-9/(e*zvo*N2*1e26*un0*A)*exp(dEac*e/(kb*Treal*1000));  // Equation 17
+V(center,schottky2)<+Rregion2*I(center,schottky2); 
+
+//Series Resistance (Rline in Figure 1 [1])
+Rseries=Rseries0*(1+alphaTseries*(Treal*1000-T0));	// Equation 18
+V(electrode1,rseries)<+Rseries*I(electrode1,rseries);	
+
+////////////////////////////////////////////////////////
+// Solve ODE 									   //
+////////////////////////////////////////////////////////
+
+// calculated minimum oxygen vacancy concentration for region I/II 
+Nmin1=1e-26/(A*l1*1e-9); 
+Nmin2=1e-26/(A*l2*1e-9);
+
+// calculation of dN/dt and determination of current concentration for region 1 and 2
+dN1dt=idt(-1/(A*l1*1e-9*e*zvo)*V(ion,gnd)/1e26,0);	// Equation 1
+dN2dt=idt(1/(A*l2*1e-9*e*zvo)*V(ion,gnd)/1e26,0);		// Equation 1
+
+N1=Ninit1+dN1dt;			
+N2=Ninit2+dN2dt;			
+
+C=2*zvo*e*a*ny0*exp(-dWa*e/(kb*Treal*1000)*(sqrt(1-pow(gamma,2))+gamma*asin(gamma)));  // Equation 3
+gamma=zvo*E_ion*a/(pi*dWa);  // Equation 4
+Nreal=sqrt(N1*N2)*1e26;	// Equation 5
+dNdx=(N2-N1)*1e26*2/(lcell*1e-9);	// Equation 6
+
+if (V(electrode1,electrode2)>0)
+	begin
+		Flimit=(1-pow(N2/Nmax,10))*(1-pow(Nmin1/N1,10));	// Equation 7
+	end
+else
+	begin
+		Flimit=(1-pow(N1/Nmax,10))*(1-pow(Nmin2/N2,10));  // Equation 7
+	end
+
+E_ion=(V(schottky1,center)+V(center,schottky2))/(lcell*1e-9); // Equation 8
+
+V(ion,gnd)<+A*C*(Nreal*sinh(a*zvo*E_ion*e/(2*kb*Treal*1000))*Flimit-a/2*dNdx*cosh(a*zvo*E_ion*e/(2*kb*Treal*1000)));		// Equation 2
+
+// energy level difference between the Fermi level in the oxide and the oxide conduction band edge [eV]
+phin1=kb*Treal*1000/e*log(2*sqrt(pow(2*pi*mdiel*kb*Treal*1000/pow(h,2),3))/(zvo*N1*1e26));	// Equation 12
+phin2=kb*Treal*1000/e*log(2*sqrt(pow(2*pi*mdiel*kb*Treal*1000/pow(h,2),3))/(zvo*N2*1e26));   // Equation 12
+
+	end		
+endmodule

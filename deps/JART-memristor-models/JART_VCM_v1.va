@@ -1,0 +1,145 @@
+// JART VCM1 compact model
+// This model has been published in the following paper
+// [1] A. Hardtdegen, C. La Torre, F. Cueppers, S. Menzel, R. Waser
+// "Improved Switching Stability and the Effect of an Internal Series Resistor in HfO2/TiOx Bilayer ReRAM Cells"
+// IEEE Transactions on Electron Devices, vol. 65, no. 8, pp. 3229-3236, 2018 
+// DOI:https://doi.org/10.1109/TED.2018.2849872
+// In this model, the equations of [1] are referenced and the nomenclature of [1] is used, with the only difference that the SET and RESET polarity is switched.
+// This model has a SET at a negative voltage and a RESET at a positive voltage. Therefore equation 3 in [1] now is valid for V > 0 and equation 5 is valid for V < 0. 
+// If this model is used for publications it should be referenced in the form:
+// The simulations were performed using the JART VCM v1 model [1]. The simulation parameters are given in table 1 of [1].
+
+// Last updated on 17.02.2020 
+// For inquires please contact jart@iwe.rwth-aachen.de
+
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+module JART_VCM_1( AE, OE );
+
+	inout AE,OE;
+	electrical slopeVwl,slopeNreal,AE,be,OE,gnd,N,T,schottkytunnel,resistorR0,ion;
+	ground gnd;
+
+// physical constants do not change!
+	localparam e 	= 1.602e-19; 								// elementary charge [C]
+	localparam kb	= 1.3807e-23;								// Boltzman's constant  [VAs/K]		
+	localparam T0 	= 293;										// ambient temperature [K] 
+	localparam Arichardson  = 6.01e5;								// Richardson's constant [A/m^2K^2]  
+	localparam pi 		  = 3.1416; 								// Pi
+	localparam mdiel		  = 9.10938e-31;			  				// electron rest mass [kg]
+	localparam h		  	  = 6.626e-34; 							// Planck's constant [Js]
+	localparam zvo		  = 2;									// oxygen vacancy charge number
+	localparam eps_0	= 8.854e-12;				      				// vacuum permittivity [As/Vm]	
+
+// fitting parameters
+	parameter real eps	= 17 from [10:25]; 							// static hafnium oxide permittivity 
+	parameter real epsphib	  =  5.5;								// hafnium oxide permittivity related to image force barrier lowering
+	parameter real phibn0 	= 0.3 from [0.1:0.5];						// nominal schottky barrier height [eV]
+	parameter real phin  	= 0.1	from [0.1:0.3];						// energy level difference between the Fermi level in the oxide and the oxide conduction band edge [eV]
+	parameter real un	= 1e-5	from [1e-6:1e-5];					// electron mobility [m^2/Vs]
+	parameter real Ndiscmax	= 20	 from [0.001:100];					// maximum oxygen vacancy concentration in the disc[10^26/m^3]
+	parameter real Ndiscmin	= 0.04	 from [0.0001:100];				// minimum oxygen vacancy concentration in the disc [10^26/m^3]
+	parameter real Ninit =0.04	from [0.0001:100];					// initial oxygen vacancy concentration in the disc [10^26/m^3]
+	parameter real Nplug = 20 from [0.001:100];						// oxygen vacancy concentration in the plug [10^26/m^3]
+	parameter real a	= 0.4e-9 from [0.1e-9:1e-9];						// ion hopping distance [m]
+	parameter real ny0	= 3e11 from [1e10:1e12];						// attemp frequenzy [Hz]
+	parameter real dWa	= 0.9 from [0.8:1.2];							// activation energy [eV]
+	parameter real Rseries = 1200 from [100:2000]; 					// series resistance [Ohm]
+	parameter real Rtheff = 1.06e6 from [1e5:20e6];					// thermal resistance of the Hafnium Oxide [K/W]
+	parameter real rfil = 30e-9 	from [5e-9:100e-9];					// radius of the filament [m]
+	parameter real lcell	= 3	from [2:5];								// length of disc and plug region [nm]
+	parameter real ldisc 	= 1 	from [0.5:5]; 							// length of the disc region [nm]
+
+
+	real A,phibn,psi,W00,W0,xi,Ischottkytunnel,cvo,Treal,Nreal,Nchange,E_ion,Rdisc,Rplug,eps_eff,epsphib_eff;
+
+	analog 
+		begin
+
+////////////////////////////////////////////////////////
+// auxiliary variables							   //
+////////////////////////////////////////////////////////
+
+eps_eff=eps*eps_0; // static hafnium oxide permittivity 
+epsphib_eff=epsphib*eps_0; // hafnium oxide permittivity related to image force barrier lowering
+A =pi*pow(rfil,2); // cross sectional filament area
+
+////////////////////////////////////////////////////////
+// equivalent circuit diagramm 					   //
+////////////////////////////////////////////////////////
+
+// local temperature in the filament
+Treal=(V(AE,be)*I(resistorR0,be)*Rtheff+T0)/1000;	// Equation 12
+
+//Schottkydiode,tunnel		
+if (V(AE,schottkytunnel)<phibn0-phin)
+	begin
+		psi=phibn0-phin-V(AE,schottkytunnel);
+		phibn=phibn0-sqrt(sqrt(pow(e,3)*zvo*Nreal*1e26*psi/(8*pow(pi,2)*pow(epsphib_eff,3))));	// Equation 4							
+		if (phibn<0)
+			begin	
+				phibn=0;
+			end
+	end			
+else
+	begin		
+		psi=0;
+		phibn=phibn0;	
+	end		
+	
+if (V(AE,schottkytunnel)<0) //TFE Schottky SET direction inverse voltage polarity with [1]
+	begin
+		W00=(e*h/(4*pi))*sqrt(zvo*Nreal*1e26/(mdiel*eps_eff));  // Equation 6
+		W0=W00/tanh(W00/(kb*1000*Treal));	// Equation 7
+		xi=W00/(W00/(kb*Treal*1000)-tanh(W00/(kb*Treal*1000)));  // Equation 8
+		Ischottkytunnel=-A*Arichardson*Treal*1000/kb*sqrt(pi*W00*e*(abs(V(AE,schottkytunnel))+phibn/pow(cosh(W00/(kb*Treal*1000)),2)))*exp(-e*phibn/W0)*(exp(e*abs(V(AE,schottkytunnel))/xi)-1);  // Equation 5
+	end
+else		//Schottkydiode TE 	RESET direction inverse voltage polarity with [1]
+	begin	
+		Ischottkytunnel= A*Arichardson*pow(1000*Treal,2)*exp(-phibn*e/(kb*1000*Treal))*(exp(e/(kb*Treal*1000)*V(AE,schottkytunnel))-1); // Equation 3
+	end
+I(AE,schottkytunnel) <+ Ischottkytunnel;
+
+//Disc Resistance
+			Rdisc=1/(Nreal*1e26*zvo*e*un)*ldisc*1e-9/A;
+             V(schottkytunnel,resistorR0)<+Rdisc*I(schottkytunnel,resistorR0);	// Equation 2
+
+//Plug Resistance
+			Rplug=(1/(Nplug*1e26*zvo*e*un)*(lcell-ldisc)*1e-9/A);
+			V(resistorR0,be)<+Rplug*I(resistorR0,be);	// Equation 2
+
+//Series Resistance
+			V(be,OE)<+Rseries*I(be,OE);	
+
+////////////////////////////////////////////////////////
+// Solve ODE 									   //
+////////////////////////////////////////////////////////
+
+///calculation of the oxygen vacancy concentration in the disc
+Nchange=idt(-1/(A*ldisc*1e-9*e*zvo)*V(ion,gnd)/1e26,0);	// Equation 9
+Nreal=Ninit + Nchange;
+V(N,gnd)<+Nreal;
+
+
+// I_ion is realised through a voltage source here
+if (((Nreal<Ndiscmin)&(V(AE,be)>0))|((Nreal>Ndiscmax)&(V(AE,be)<0)))	// keep concentration Nreal in the borders of Ndiscmin and Ndiscmax
+	begin
+		V(ion,gnd)<+0;
+	end
+else
+	begin 
+		cvo = (Nplug+Nreal)/2*1e26;
+		if (V(AE,be)>0)
+			begin
+				E_ion=V(AE,be)/(lcell*1e-9); // Equation 11 RESET 
+			end
+		else
+			begin
+				E_ion=V(schottkytunnel,resistorR0)/(ldisc*1e-9); // Equation 11 SET
+			end
+			V(ion,gnd)<+2*zvo*e*cvo*a*ny0*A*exp(-dWa*e/(kb*Treal*1000))*sinh(zvo*a*E_ion*e/(2*kb*1000*Treal));
+	end
+		end
+endmodule

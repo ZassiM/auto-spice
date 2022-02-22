@@ -1,0 +1,236 @@
+// This model has been published in the following papers 
+// [Menzel2013001] S. Menzel, S. Tappertzhofen, R. Waser, I. Valov, 
+// "Switching Kinetics of Electrochemical Metallization Memory Cells"
+// Physical Chemistry Chemical Physics, vol. 15, no. 18, pp. 6945-6952, 2013
+// doi:10.1039/C3CP50738F
+// [Menzel2012001] S. Menzel, U. Boettger, R. Waser, 
+// "Simulation of Multilevel Switching in Electrochemical Metallization Memory Cells"
+// Journal of Applied Physics, vol. 111, no. 1, 014501/1-5, 2012
+// doi:10.1063/1.3673239
+// In this script, the equations of [Menzel2013001] are referenced and the nomenclature of [Menzel2013001] is used. 
+// If this model is used for publications appropriate should be given in the form:
+// The simulations were performed using the JART ECM v1 model [1][2]. The used simulation parameters are given in Table 1.
+
+`include "disciplines.vams"
+
+module JART_ECM_new(te,be);
+	inout te,be;
+	ground gnd;
+	electrical te,be,ion,fil,filAtu,track_gap, eta_fil, eta_ac, eta_hop;
+ 
+
+	
+	///////////////////////////////////////////////////////
+	////		Physical constants - DO NOT CHANGE!!!!		////
+	///////////////////////////////////////////////////////
+
+	localparam e 			= 1.60217662e-19; 		// [C] 		elementary charge 
+	localparam kb			= 1.38064852e-23;		// [J/K]		Boltzman's constant  	
+	localparam pi 			= 3.14159265; 			// [ ] 		Pi
+	localparam m_electron 	= 9.10938356e-31;		// [kg]		electron rest mass		  				
+	localparam h		  	 	= 6.62607004e-34; 		// [J*s]		Planck's constant
+	localparam eps_0			= 8.85418781e-12;		// [F/m]		vacuum permittivity 		      			
+	localparam NA			= 6.02214086e23; 		// [mol^-1]	Avogadro-Constant
+
+
+
+	///////////////////////////////////////////////////
+	////				Fitting parameters			////
+	///////////////////////////////////////////////////
+												
+	//Geometry and material specific parameters
+	parameter real L = 30; 								// [nm] 		2-30 nm - Thickness of isolator; 
+	parameter real F = 40e-9;								// [m] 		feature size - defines cross-section of electrodes	
+	parameter real thickness_inert_electrode = 20e-9; 		// [m]		5-50 nm
+	parameter real thickness_active_electrode = 10e-9; 	// [m] 		5-50 nm
+	parameter real rho_active_electrode = 1.7e-8; 			// [Ohm m] 	Cu: 1.68e-8 Ag: 1.59e-8 - specific resistiance of the active electrode
+	parameter real rho_isolator = 1e-2; 					// [Ohm m]	specific resistance of the isolator
+	parameter real rho_inert_electrode = 1.06e-7; 			// [Ohm m]	Pt: 1.06e-7	- specific resistiance of the inert electrode	
+
+	parameter real mass_density = 10.49e6; 				// [g/m^3] 	Cu: 8.96e6 , Ag: 10.49e6											
+	parameter real molecular_mass = 1.79e-22; 				// [g] 		Cu: 1.0551e-22, Ag: 1.7912 e-22			 														
+	parameter real atomic_radius = 0.172;					// [nm]		Cu: 0.14	, Ag: 0,172
+	parameter real z = 1; 								// [ ]		Cu: 1 or 2, Ag: 1	- Charge number	
+
+	//Parameters defining the asymmetry of the Set/reset transition in combination with alpha_et
+	parameter real radius_active_electrode = 16.0e-09; 	// [m], 		F/2 >= r_ac >= r_fil - defines the effective reactive area on the active electrode
+	parameter real radius_filament = 2.0e-09; 				// [m], 		2-10nm - defines the filament radius
+	parameter real radius_ion_drift = 2.0e-09; 			// [m]; 		IMPORTANT: r_ac >= r_ion >= r_fil - effective cross section of ion transport
+
+	//Parameters defining the ionic current
+	parameter real a = 0.25e-9;							// [m] 		0.15e-9<a<0.5e-9 - hopping distance; 
+	parameter real f = 2.43e15;							// [Hz]	  	1e11 - 1e14 - hopping attempt frequency
+	parameter real dGhop = 0.32;							// [eV]		0.1-1.5 - migration barrier 
+	
+	parameter real alpha_et = 0.3;						// [ ]  		0<alpha_et<1 - exchange coefficient, defines slope in BV limited;			
+	parameter real dG_et = 0.6;							// [eV] 		0.2-2 eV - activation energy; 
+	parameter real k_et = 1.93e5;							// [m/s]		10e-2 - 10e3 - reaction rate 
+
+	parameter real c_M = 1.45e29; 						// [m^-3]	1e21<c< 5e28	 - Cu/Ag ion concentration within the oxide
+	
+	//Material specific parameters for the tunneling current	
+	parameter real work_function = 4.5; 					// [eV] 		Cu: 4.7, Ag:4.5 - work function of the active material												
+	parameter real electron_affinity = 0.9; 				// [eV]		electron_affinity < work_function - electron affinity of the isolator 
+	parameter real m_r = 0.023; 							// [ ]		0.02-10 - relative effective electron tunneling mass
+														
+	//Parameters defining the nucleation
+	parameter real t0nuc=2e-8;							// [s] 		1e-10 - 1e-6; prefactor of nucleation time
+	parameter real dGnuc=0.8;								// [eV]		0.5-1.5 - activation energy for nucleation 
+	parameter real Nc=3;									// [ ]		1-4 - number of critical atoms of nucleus; 
+	parameter real alpha_nuc=0.3;							// [ ]		0<alpha_nuc<1 - electron transfer from inert electrode to filament, can be different to alpha		
+
+	//general parameter
+	parameter real temp = 298; 							// [K]		Environment temperature - we assume constant T for ECMs 
+	parameter real Rseries = 1000000; 					// [Ohm]		Series resistance of the circuit	
+	parameter real ic =	0.01e+00;						// [ ]		Integration constant of the state variable 'gap', coresponds to initial length of the filament in nm
+	
+
+
+	/////////////////////////////////////////////
+	////			Auxiliary variables		  ////
+	////////////////////////////////////////////
+
+	real VT = kb*temp/e; 										// [Temperature Voltage kb*T/e in V]
+
+	//Geometry parameters
+ 	real A_el = pow(F,2);
+	real A_fil = pi*pow(radius_filament,2);
+	real A_is = pi*pow(radius_ion_drift,2);
+	real A_ac = pi*pow(radius_active_electrode,2);
+
+	//Variables for ohmic contribution
+	real r_fil = rho_active_electrode/A_fil*1e-9;						//[Ohm/nm] needs to be multiplied by length for resistance of filament	
+	real Rel = rho_active_electrode*thickness_active_electrode/A_el + rho_inert_electrode*thickness_inert_electrode/A_el;
+
+	//Hopping variables
+	real j0_hop = 2*z*e*c_M*a*f*exp(-dGhop/VT); 				// Hopping current density in [A/m^2] - Equation [4] Menzel2013001	
+	real io_hop = j0_hop*A_is;
+	real k_hop = a*z/(2*VT)*1e9; 								// Exponential prefactor of Equation [8] Menzel2013001 (normalized to nm because gap in nm)
+
+	//Electron transfer variabls
+	real j0_et = z*e*c_M*k_et*exp(-dG_et/VT); 					// Exchange current density in [A/m^2] - Equation [3] Menzel2013001 
+	real io_fil = j0_et*A_fil;
+	real io_ac = j0_et*A_ac;
+
+	//Variables related with Simmons
+	real Eb = e*(work_function - electron_affinity); 			// [barrier height in V]
+	real m = m_r*m_electron;
+	real K1 = 2.7*A_fil*3*sqrt(2*m*Eb)/2*pow(e/h,2)*1e9;       // First prefactor of Equation [11] Menzel2013001
+	real K2 = 4*pi*sqrt(2*m*Eb)/h*1e-9;                        // Exponential prefactor of Equation [11] Menzel2013001 (normalized to Nanometer because gap in nm)
+
+	//ODE parameters
+	real contact_mode = 0;									// If filament connects te and be the model is not valid anymore, variable needed for raising a warning if this happens
+	real xnuc=a*1e9;  										// normalized to nm because gap in nm
+	real Kdep = molecular_mass/(e*z*mass_density*A_fil)*1e9;  	// Prefactor of Equation [5] Menzel2013001
+	real ic1, tnuc;	
+
+	//State variable - defining the length of the gap between the filament and the active electrode
+	real gap = L;
+
+	//only add these parameters if self capacitance of the cell should be added in the model
+	//real capacitance;			
+	//parameter real eps_r=8;									// [ ]	3-100 - relative permittivity of the host oxide	
+
+
+
+	/////////////////////////////////////////////////////
+	////			equivalent circuit diagramm		  ////
+	////////////////////////////////////////////////////
+
+	//	AE = active electrode, IE = inert electrode, I = insulator
+	//	 	 	 											 ----- te (AE)
+	// 	[I(V)] Tafel equation AE/I interface (Set&Reset)		 |     |
+	//														ion    |
+	//	[I(V)] Hopping current Equation [8]					 |     |	    [I(V) described by Equation [11] low voltage simmons approximation]
+	//														fil    |
+	//	[I(V)] Tafel equation Filament/I interface (Set&Reset)	 |     |
+	//	 													 --- filAtu
+	//		     												   | 	[V(I) described by Equation [13] ohms law]
+	//	       	  												   be (IE)
+	
+	analog 
+		begin
+	
+			//Add self capacitance if needed
+			//capacitance )= eps_0*eps_r*F*F/L;
+			//I(te, be) <+ capacitance*ddt(V(te,be));
+
+			//Tafel equation of the active elctrode insulator interface
+			if (V(te,be)<0)
+				//Reset
+				I(te,ion) <+ io_ac*(1-exp(-alpha_et*z*V(te,ion)/VT)); 			// similar to Equation [6] Menzel2013001 - describes Reset of AE/I interface
+			else
+				//Set
+				I(te,ion) <+ io_ac*(exp((1-alpha_et)*z*V(te,ion)/VT)-1); 		// Equation [7] Menzel2013001
+
+			I(ion,fil) <+ io_hop*sinh(k_hop*V(ion,fil)/(gap)); 				// Equation [8] Menzel2013001 - hopping current 
+
+			//Tafel equation of insulator/fillament interface
+			if (V(te,be)<0)
+				//Reset 	
+				I(fil,filAtu) <+io_fil*(1-exp((1-alpha_et)*z*(-V(fil,filAtu))/VT));		// similar to Equation [7] Menzel2013001 - describes Reset of I/Fil interface
+			else
+				//Set
+				I(fil,filAtu) <+io_fil*(exp(-alpha_et*z*(-V(fil,filAtu))/VT)-1); 		// Equation [6] Menzel2013001
+
+			//Growth is simulated by reducing the tunneling gap between the filament and the active electrode
+			I(te,filAtu) <+ V(te,filAtu)*(K1/(gap))*exp(-K2*(gap)); 		// Equation [11] Menzel2013001 - Tunneling current
+
+			//ohmic contribution of electrodes, filament and series resistance	
+			V(filAtu,be) <+ (r_fil*(L-gap)+Rel+Rseries)*I(filAtu,be);  		// Equation [13] Menzel2013001 - ohmic resistances of filament, electrodes and 
+
+
+
+			///////////////////////////////////////////
+			////				Solve ODE			////
+			//////////////////////////////////////////
+
+			tnuc=t0nuc*exp(dGnuc/VT)*exp(-(Nc+alpha_nuc)*z*V(te,be)/VT); 	// Equation [1] Menzel2013001
+
+			if (contact_mode == 0)
+				begin
+					//Gap smaller than an atomic radius, the filament connects te and be and the model is not valid anymore.
+					if (((gap<atomic_radius) & (I(fil,filAtu)>0)) )
+						begin
+							//Warning! Entering contact mode. The model is not valid anymore.
+							ic1 = 0;
+							contact_mode=1;
+						end
+					//Before a filament can grow during the set a seed has to be grown
+					else if ((gap>L-xnuc)&(I(fil,filAtu)>0))
+						begin
+							ic1 = xnuc/tnuc;
+						end
+					//If the filament is dissolved the state filament gap cannot grow anymore during the reset
+					else if ((gap>L-atomic_radius) & (I(fil,filAtu)<0))
+						begin
+							ic1 = 0;
+						end
+					//Calculating the change of the gap
+					else
+						begin
+							ic1=Kdep*I(fil,filAtu);	
+						end
+				end
+			else
+				begin
+					//Warning! Now in contact mode. The model is not valid anymore.
+					$monitor("WARNING: Contact Mode, left boundary conditions of the model, no reset possible anymore");
+					ic1 = 0;
+				end
+
+			//Calculating the state variable gap, it describes gap between the filament and the top electrode
+			gap = L  - idt(ic1, ic); 
+
+
+
+			//Implemented for tracking the overpotentials
+			//Important:	during nucleation no overpotential should be present because all voltage used for nucleation
+			//			for convergence reasons overpotentials are anyways calculated
+			V(eta_fil,gnd) <+ V(fil,filAtu);
+			V(eta_ac,gnd) <+ V(te,ion);
+			V(eta_hop,gnd) <+ V(ion,fil);
+			V(track_gap,gnd) <+gap;				
+
+		end
+endmodule
