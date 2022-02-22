@@ -1,13 +1,37 @@
-parameters  eps = 17 epsphib = 5.5 Ndiscmin=0.008
-subckt my_ckt r0 c0 
-I0 (r0 c0) JART_VCM_1b_VAR eps = 17 epsphib = 5.5 phibn0 = 0.18 phin = 0.1 un = 4e-06 Ndiscmax = 20 Ndiscmin = 0.008 Ninit = Ndiscmin Nplug = 20 a = 2.5e-10 nyo = 20000000000000.0 dWa = 1.35 Rth0 = 15720000.0 rdet = 4.5e-08 rnew = 4.5e-08 lcell = 3 ldet = 0.4 lnew = 0.4 Rtheff_scaling = 0.27 RTiOx = 650 R0 = 719.244 Rthline = 90471.5 alphaline = 0.00392 eps_eff = (eps)*(8.85419e-12) epsphib_eff = (epsphib)*(8.85419e-12) 
-ends my_ckt
-XBAR (r0 c0 ) my_ckt
-V0 (r0  0) vsource type=pulse val0=-1.4 val1=1.2 period=200n width=50n rise=25n fall=25n 
-V1 (c0  0) vsource type=pulse val0=0.0 val1=0.0 period=200n width=50n rise=25n fall=25n 
-
- save XBAR.I0:OE XBAR.I0:AE
+global 0
 ahdl_include "C:\Users\wasso\Desktop\HiWi\Gitlab\auto-spice/deps/JART-memristor-models/JART_VCM_v1b.va"
 simulatorOptions options vabstol=1e-6 iabstol=1e-12 temp=27 tnom=27 gmin=1e-12
-trans tran stop=10u errpreset=conservative maxstep =1u write="spectre.ic" 		writefinal="spectre.fc" annotate=status maxiters=5
-saveOptions options save=all currents=all saveahdlvars=all
+trans tran stop=10u errpreset=conservative maxstep =1u
+saveOptions options save=all currents=all SINGLE.I0:OE SINGLE.I0:AE
+
+subckt my_ckt r0 c0
+I0 (r0 c0) JART_VCM_1b_det eps = 17 epsphib = 5.5 phibn0 = 0.18 phin = 0.1 un = 4e-06 Ndiscmax = 20 Ndiscmin = 0.008 Ninit = Ndiscmin Nplug = 20 a = 2.5e-10 nyo = 20000000000000.0 dWa = 1.35 Rth0 = 15720000.0 rdet = 4.5e-08 rnew = 4.5e-08 lcell = 3 ldet = 0.4 lnew = 0.4 Rtheff_scaling = 0.27 RTiOx = 650 R0 = 719.244 Rthline = 90471.5 alphaline = 0.00392 eps_eff = (eps)*(8.85419e-12) epsphib_eff = (epsphib)*(8.85419e-12) 
+ends my_ckt
+SINGLE (r0 c0) my_ckt
+
+V0 (r0 0) vsource type=pwl wave=[\
+0u	0	\
+999u	0	\
+1000u	0.2	\
+1999u	0.2	\
+2000u	0	\
+2999u	0	\
+3000u	-1.05	\
+3999u	-1.05	\
+4000u	0	\
+4999u	0	\
+5000u	0.2	\
+5999u	0.2	\
+6000u	0	\
+6999u	0	\
+7000u	0.75	\
+7999u	0.75	\
+8000u	0	\
+8999u	0	\
+9000u	0.2	\
+9999u	0.2	\
+10000u	0	\
+10999u	0	\
+]
+V1 (c0  0) vsource dc=0
+

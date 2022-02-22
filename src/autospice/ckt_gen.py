@@ -105,6 +105,104 @@ class netlist_design(parameters):
 		return output_data + voltages_name +"\n" + instance + end_ckt + subckt_instance + voltage_source + "\n save " +all_current + "\n" 
 
 
+	def create_pulse(self, step_time, pulse_vol, time_unit, pulses = []):
+		
+		insert_p = False
+		concatenated = False
+
+		if not pulses:	# empty list
+			start_time = 0
+			stop_time = 3000
+			concatenated = False
+
+		else:
+			start_time = (int(pulses[-2][:-1])+1) # get last time
+			stop_time = start_time + 2000
+			concatenated = True
+
+		for i in range(start_time, stop_time, step_time):
+
+			if insert_p == False and concatenated == False:
+				pulses.append(str(i)+time_unit)
+				pulses.append('0')
+				pulses.append(str(i+(step_time-1))+time_unit)
+				pulses.append('0')
+				insert_p = True
+				
+			else:
+				pulses.append(str(i)+time_unit)
+				pulses.append(str(pulse_vol))
+				pulses.append(str(i+(step_time-1))+time_unit)
+				pulses.append(str(pulse_vol))
+				insert_p = False
+				concatenated = False
+
+
+	def convert_to_pulses(self, in_pulses_list = []):
+
+		pulses_list = []
+		for pulse in in_pulses_list:
+			if pulse.lower() == "read":
+				self.create_pulse(1000, self.read_v, self.time_units, pulses_list)
+
+			elif pulse.lower() == "set":
+				self.create_pulse(1000, self.set_v, self.time_units, pulses_list)
+				
+			elif pulse.lower() == "reset":
+				self.create_pulse(1000, self.reset_v, self.time_units, pulses_list)
+
+		if not pulses_list:
+			print("Empty list!")
+			return
+		
+		pulses_str = ""
+		pulses_str += "V0 (r0 0) vsource type=pwl wave=[\\\n"
+		for i in range(0, len(pulses_list)-1, 2):
+			pulses_str += pulses_list[i] + '\t' + pulses_list[i+1] + '\t\\\n'
+
+		pulses_str += ']'
+		return pulses_str
+
+
+		
+	def gen_netlist_single(self,static_param= {}, pulses = [], file_name = "", model_path = ""):
+		'''
+		Three parts:
+		1) Global params, sim params, simul options
+		2) Circuit instances
+		3) Pulses
+		'''
+		print("Generating netlist...\n")
+		ckt_name = "SINGLE"
+
+		str_param = ""
+		str_ckt = ""
+		str_pulses = ""
+
+		str_param += "global 0\n"
+		str_param += "ahdl_include " + "\"" + model_path + "\"" + "\n"
+		str_param += "simulatorOptions options vabstol=1e-6 iabstol=1e-12 temp=27 tnom=27 gmin=1e-12\n"
+		str_param += f"trans {self.simulation_type} stop={self.simulation_stop_time} errpreset=conservative maxstep ={self.simulation_maxstep}\n"
+		str_param += f"saveOptions options save=all currents=all {ckt_name}.I0:OE {ckt_name}.I0:AE\n\n"
+
+		str_ckt += "subckt my_ckt r0 c0\n"
+		str_ckt += f"I0 (r0 c0) {self.device_model} "		#TO DO: device model not hard coded"
+		str_ckt += self.set_device_parameters(param=static_param) + "\n"
+		str_ckt += "ends my_ckt\n"
+		str_ckt += f"{ckt_name} (r0 c0) my_ckt\n\n"
+
+		str_pulses += self.convert_to_pulses(pulses)
+		str_pulses += "\nV1 (c0  0) vsource dc=0\n\n"
+
+		to_be_written = str_param + str_ckt + str_pulses
+
+		file_ = open(file_name,"w")
+		file_.write(to_be_written)
+		print(f"Netlist, model path and simulation parameters written to \"{file_name}\"\n")
+
+		#print(f"Netlist generated with {self.rows * self.columns} instances.\n")
+
+
 	def write_into_file(self,file_name = "auto_generated.scs", model_path = "JART_VCM_1b_verilog-var.va", to_be_written = " "):
 
 		"""
@@ -126,23 +224,3 @@ class netlist_design(parameters):
 		file_.write(ana_sis)   #NEW CHANGE
 
 		print(f"Netlist, model path and simulation parameters written to \"{file_name}\"\n")
-		
-	def design_ckt_single (self, variables = "", static_param= {}, ckt_name= "my_ckt", pulses = []):
-		'''
-		Three parts:
-		1) Global params, sim params, simul options
-		2) Circuit instances
-		3) Pulses
-		'''
-		print("Generating netlist...\n")
-		str_param = ""
-		str_ckt = ""
-		str_pulses = ""
-		
-
-		# all combined into single string
-		print(f"Netlist generated with {self.rows * self.columns} instances.\n")
-		return output_data + voltages_name +"\n" + instance + end_ckt + subckt_instance + voltage_source + "\n save " +all_current + "\n" 
-
-
-		

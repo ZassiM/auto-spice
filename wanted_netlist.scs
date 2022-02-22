@@ -1,6 +1,9 @@
 * Read - Set - Read - Reset - Read
 global 0
 ahdl_include "/net/home/zahr/Documents/Gitlab/auto-spice/deps/JART-memristor-models/JART_VCM_v1b.va"
+simulatorOptions options vabstol=1e-6 iabstol=1e-12 temp=27 tnom=27 gmin=1e-12
+trans tran stop=7u errpreset=conservative maxstep=1e-9
+saveOptions options save=all currents=all save XBAR.I0:OE XBAR.I0:AE
 
 subckt my_ckt r0 c0 
 I0 (r0 c0) JART_VCM_1b_det T0=0.293 \
@@ -37,11 +40,8 @@ V0 (r0 0) vsource type=pwl wave=[\
 ]
 V1 (c0  0) vsource dc=0
 
-save XBAR.I0:OE XBAR.I0:AE
 
 * srjt V0 (r0  0) vsource type=pulse val0=-1.4 val1=1.2 period=200n width=50n rise=25n fall=25n 
 * zahr V0 (r0 0) vsource type=pwl wave=[ 0 0 0.9 0 1 0.2 1.9 0.2 2 0 2.9 0 3 -0.75 3.9 -0.75 4 0 4.9 0 5 0.2 5.9 0.2 6 0 6.9 0 7 1.5 7.9 1.5 8 0 8.9 0 9 0.2 9.9 0.2 10 0 11 0]
 
-simulatorOptions options vabstol=1e-6 iabstol=1e-12 temp=27 tnom=27 gmin=1e-12
-trans tran stop=7u errpreset=conservative maxstep=1e-9
-saveOptions options save=all currents=all
+

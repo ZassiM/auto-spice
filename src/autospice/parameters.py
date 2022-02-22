@@ -4,17 +4,20 @@ import copy
 
 class parameters(object):  # base class for parameters
 	"""docstring for parameters"""
-	def __init__(self, device="var", simulation = "spectre"): #two type of device we have var (variablity) and det (deterministic)
-
+	def __init__(self, device="det", simulation = "spectre"): #two type of device we have var (variablity) and det (deterministic)
+		
 		if simulation !="spectre":
 			print("simulation needs to be set = spectre")
 			exit()
 		if device =="var":
 			self.device_model= "JART_VCM_1b_VAR"
+		
+		else:
+			self.device_model= "JART_VCM_1b_det"
 
 		#self.set_default_params()
 
-	def set_device_parameters(self, param= {}, model_name="var"):
+	def set_device_parameters(self, param= {}, model_name="det"):
 		"""
 			Generates a string containing all the parameters for each memristor. It is used during the generation of the netlist
 			(design_ckt function) in appending the string for each instance
@@ -22,7 +25,7 @@ class parameters(object):  # base class for parameters
 		"""
 
 		self.device_parameters = ""
-		if model_name=="var":
+		if model_name=="var" or model_name == "det":
 			for i in param:
 				self.device_parameters+= i + " = " + str(param[i]) + " "   #concatinate the string according to each parameter
 		
@@ -121,32 +124,6 @@ class parameters(object):  # base class for parameters
 		
 		print("Voltage pulses correctly added.\n")
 
-	def create_set_reset_pulses(self, set_v, reset_v, read_v):
-		#V0 (r0 0) vsource type=pwl wave=[ 0 0 0.9 0 1 0.2 1.9 0.2 2 0 2.9 0 3 -0.75 3.9 -0.75 4 0 4.9 0 5 0.2 5.9 0.2 6 0 6.9 0 7 1.5 7.9 1.5 8 0 8.9 0 9 0.2 9.9 0.2 10 0 12 0]
-		#V1 (c0 0) vsource dc=0
-
-		sim_time = self.simulation_stop_time
-		pulse = []
-		time_edge=False
-		for i in range(0, sim_time):
-			if time_edge == False:
-				pulse.append(i)
-				time_edge = True
-			else:
-				pulse.append(i+0.9)
-				time_edge = False
-
-			if i%2==0:
-				pulse.append(0)
-			elif i==1 or i==5 or i==9:
-				pulse.append(read_v)
-			elif i==3:
-				pulse.append(set_v)
-			elif i==7:
-				pulse.append(read_v)
-
-
-		return pulse
 
 
 
@@ -165,17 +142,21 @@ class parameters(object):  # base class for parameters
 		self.simulation_stop_time = stop_time
 		self.simulation_type = type_
 		self.simulation_maxstep = maxstep
+		self.time_units = stop_time[-1] #last character
 
 
 		print(f"Stop time: {self.simulation_stop_time}s, Max step: {self.simulation_maxstep}s.\n")
 
-	def set_cross_bar_params(self, rows = 5, columns = 5):
+	def set_xbar_params(self, rows = 5, columns = 5, read_v = 0.2, set_v = -1.05, reset_v = 0.75):
 		"""
 			initilize the cross bar based on the number of input
 		"""
 
 		self.rows = rows
 		self.columns = columns
+		self.read_v = read_v
+		self.set_v = set_v
+		self.reset_v = reset_v
 
 		print(f"{self.rows}x{self.columns} crossbar generated.\n")
 		return (self.rows,self.columns)
