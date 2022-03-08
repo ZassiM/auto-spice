@@ -78,7 +78,7 @@ class netlist_design(parameters):
 		# iterate for each device
 		for rows in range(self.rows):
 			for cols in range(self.columns):
-				iteration = str(cols+(rows*self.columns)) # total number of iteration - required for creating number of devices
+				iteration = str(cols+(self.rows*self.columns)) # total number of iteration - required for creating number of devices
 
 				varing_dict_ = self.variablity_param(iteration) #update dict for variation in each device 
 
@@ -105,62 +105,76 @@ class netlist_design(parameters):
 		return output_data + voltages_name +"\n" + instance + end_ckt + subckt_instance + voltage_source + "\n save " +all_current + "\n" 
 
 
-	def create_pulse(self, step_time, pulse_vol, time_unit, pulses = []):
-		
+	def create_pulse(self, step_time, pulse_vol, time_unit, pulses, idx):
+    
 		insert_p = False
 		concatenated = False
-
-		if not pulses:	# empty list
+	
+		
+		if not pulses[idx]:	# empty list
 			start_time = 0
 			stop_time = 3000
 			concatenated = False
 
 		else:
-			start_time = (int(pulses[-2][:-1])+1) # get last time
+			start_time = int(pulses[idx][-2][:-1])+1 # get last time
 			stop_time = start_time + 2000
 			concatenated = True
-
+		
 		for i in range(start_time, stop_time, step_time):
 
 			if insert_p == False and concatenated == False:
-				pulses.append(str(i)+time_unit)
-				pulses.append('0')
-				pulses.append(str(i+(step_time-1))+time_unit)
-				pulses.append('0')
+				pulses[idx].append(str(i)+time_unit)
+				pulses[idx].append('0')
+				pulses[idx].append(str(i+(step_time-1))+time_unit)
+				pulses[idx].append('0')
 				insert_p = True
 				
 			else:
-				pulses.append(str(i)+time_unit)
-				pulses.append(pulse_vol)
-				pulses.append(str(i+(step_time-1))+time_unit)
-				pulses.append(pulse_vol)
+				pulses[idx].append(str(i)+time_unit)
+				pulses[idx].append(pulse_vol)
+				pulses[idx].append(str(i+(step_time-1))+time_unit)
+				pulses[idx].append(pulse_vol)
 				insert_p = False
 				concatenated = False
 
 
-	def convert_to_pulses(self, in_pulses_list = []):
+	def pulses_to_string(self, in_pulses_list):
+		pulses = [[] for _ in range(self.rows*self.columns)]
 
-		pulses_list = []
-		for pulse in in_pulses_list:
-			if pulse.lower() == "read":
-				self.create_pulse(1000, "Read_V", self.time_units, pulses_list)
+		
+		for s in in_pulses_list:
+			pulse_str = s[0:s.find('(')]
+			pulse_idx = s[s.find('(')+1:s.find(')')]
+			pulse_idx = pulse_idx.split(",")
+			row,column = int(pulse_idx[0]), int(pulse_idx[1])
+			idx = self.columns*row + column
 
-			elif pulse.lower() == "set":
-				self.create_pulse(1000, "Set_V", self.time_units, pulses_list)
+			if pulse_str.lower() == "read":
+				self.create_pulse(1000, "Read_V", self.time_units, pulses, idx)
 				
-			elif pulse.lower() == "reset":
-				self.create_pulse(1000, "Reset_V", self.time_units, pulses_list)
 
-		if not pulses_list:
+			elif pulse_str.lower() == "set":
+				self.create_pulse(1000, "Set_V", self.time_units, pulses, idx)
+
+			elif pulse_str.lower() == "reset":
+				self.create_pulse(1000, "Reset_V", self.time_units, pulses, idx)
+			
+
+		if not pulses:
 			print("Empty list!")
 			return
 		
 		pulses_str = ""
-		pulses_str += "V0 (r0 0) vsource type=pwl wave=[\\\n"
-		for i in range(0, len(pulses_list)-1, 2):
-			pulses_str += pulses_list[i] + '\t' + pulses_list[i+1] + '\t\\\n'
+		c = 0
+		for i in range(0, self.rows):
+			for j in range(0, self.columns):
+				pulses_str += f"V{c} (r{i} c{j}) vsource type=pwl wave=[\\\n"
+				for k in range(0, len(pulses[self.columns*i + j])-1, 2):
+					pulses_str += pulses[self.columns*i + j][k] + '\t' + pulses[self.columns*i + j][k+1] + '\t\\\n'
+				pulses_str += ']\n\n'
+				c += 1
 
-		pulses_str += ']'
 		return pulses_str
 
 
@@ -176,12 +190,12 @@ class netlist_design(parameters):
 			if(row > rows): rows = row
 			if(column > columns): columns = column
 		
-		self.rows = rows
-		self.columns = columns
+		self.rows = rows + 1
+		self.columns = columns + 1
 
 
 
-	def gen_netlist_single(self,static_param= {}, pulses = [], file_name = "", memristor_model_path = "", transistor_model_path = ""):
+	def gen_netlist(self,static_param= {}, pulses = [], file_name = "", memristor_model_path = "", transistor_model_path = ""):
 		'''
 		Three parts:
 		1) Global params, sim params, simul options
@@ -189,8 +203,6 @@ class netlist_design(parameters):
 		3) Pulses
 		'''
 		print("Generating netlist...\n")
-		
-		ckt_name = "SINGLE"
 
 		str_param = ""
 		str_ckt = ""
@@ -203,7 +215,7 @@ class netlist_design(parameters):
 		str_param += "simulatorOptions options vabstol=1e-6 iabstol=1e-12 temp=27 tnom=27 gmin=1e-12\n"
 		str_param += f"trans {self.simulation_type} stop={self.simulation_stop_time} errpreset=conservative maxstep ={self.simulation_maxstep}\n"
 		str_param += f"saveOptions options save=all currents=all\n"
-		str_param += f"save {ckt_name}.I0:OE {ckt_name}.I0:AE\n"
+		#str_param += f"save {ckt_name}.I0:OE {ckt_name}.I0:AE\n"
 		str_param += f"parameters Read_V = {self.read_v} Set_V = {self.set_v} Reset_V = {self.reset_v}\n"
 		str_param += "parameters " + self.parameters_list(param=static_param) + "\n\n\n"
 
@@ -218,15 +230,17 @@ class netlist_design(parameters):
 			for j in range(0, self.columns):
 				str_instances += f"I{k} (c{j} 0 r{i} 0) 1T1M_ckt\n"
 				k += 1
+		
+		
 
-		#str_pulses += self.convert_to_pulses(pulses)
-		str_pulses += "\nV1 (c0  0) vsource dc=0\n\n\n"
+		str_pulses += "\n\n" + self.pulses_to_string(pulses)
+		#str_pulses += "\nV1 (c0  0) vsource dc=0\n\n\n"
 
 		to_be_written = str_param + str_ckt + str_instances + str_pulses
 		file_ = open(file_name,"w")
 		file_.write(to_be_written)
 		print(f"Netlist, model path and simulation parameters written to \"{file_name}\"\n")
-		print(self.rows, self.columns)
+		
 
 
 

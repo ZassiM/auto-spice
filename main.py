@@ -56,7 +56,7 @@ var_bools = ckt.set_variablity(Nmin = nmin_b, Nmax = nmax_b, ldet = ldet_b, rdet
 var_param = ckt.update_param(static_param_sim, mean_sigma, var_bools)	# update the parameters of the memristors in case the var_bools are set
 
 
-ckt.gen_netlist_single(static_param, in_pulses_list, out_file_name, memristor_model_path, transistor_model_path)	# create spectre netlist using the parameters set before and the static and variab parameters
+ckt.gen_netlist(static_param, in_pulses_list, out_file_name, memristor_model_path, transistor_model_path)	# create spectre netlist using the parameters set before and the static and variab parameters
 
 
 

@@ -81,17 +81,16 @@ def pulses_to_string(in_pulses_list):
     c = 0
     for i in range(0, rows):
         for j in range(0, columns):
-            pulses_str += "V{c} (r{i} c{j}) vsource type=pwl wave=[\\\n"
+            pulses_str += f"V{c} (r{i} c{j}) vsource type=pwl wave=[\\\n"
             for k in range(0, len(pulses[columns*i + j])-1, 2):
-                pulses_str += pulses[columns*i + j][k] + '\t' + pulses[columns*i + j] + '\t\\\n'
+                pulses_str += pulses[columns*i + j][k] + '\t' + pulses[columns*i + j][k+1] + '\t\\\n'
             pulses_str += ']'
             c += 1
 
     return pulses_str
 
 p = pulses_to_string(lines)
-for a in p:
-    print(a)
+
 
 # read(0,0)
 # set(0,0)
