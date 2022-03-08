@@ -207,16 +207,6 @@ class netlist_design(parameters):
 		str_param += f"parameters Read_V = {self.read_v} Set_V = {self.set_v} Reset_V = {self.reset_v}\n"
 		str_param += "parameters " + self.parameters_list(param=static_param) + "\n\n\n"
 
-
-		# subckt memristor_1T1M MemInput Output TransGate inh_bulk_n
-		# 	I0 (net03 MemInput) JART_VCM_1b_det T0=0.293 eps=17 epsphib=5.5 \
-		# 		phiBn0=0.18 phin=0.1 un=4e-06 Ndiscmax=20 Ndiscmin=0.008 \
-		# 		Ninit=0.008 Nplug=20 a=2.5e-10 ny0=2e+13 dWa=1.35 Rth0=1.572e+07 \
-		# 		rdet=4.5e-08 lcell=3 ldet=0.4 Rtheff_scaling=0.27 RseriesTiOx=650 \
-		# 		R0=719.244 Rthline=90471.5 alphaline=0.00392
-		# 	M0 (net03 TransGate Output inh_bulk_n) nmos
-		# ends memristor_1T1M
-
 		str_ckt += "subckt 1T1M_ckt MemInput Output TransGate inh_bulk_n\n"
 		str_ckt += f"\tM0 (net03 MemInput) {self.memristor_model}"
 		str_ckt += "\t" + self.parameters_list(param=static_param, numerical_mode = False) + "\n"

@@ -165,8 +165,8 @@ class parameters(object):  # base class for parameters
 			if(row > rows): rows = row
 			if(column > columns): columns = column
 
-		self.rows = rows
-		self.columns = columns
+		self.rows = rows + 1
+		self.columns = columns + 1
 
 	def set_xbar_params(self, read_v = 0.2, set_v = -1.05, reset_v = 0.75):
 		"""

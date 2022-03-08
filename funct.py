@@ -1,5 +1,3 @@
-
-
 with open("pulses.txt") as file_in:
     lines = []
     lines = list(line for line in (l.strip() for l in file_in) if line)
@@ -15,62 +13,98 @@ for s in lines:
     if(row > rows): rows = row
     if(column > columns): columns = column
 
-def create_pulse(self, step_time, pulse_vol, time_unit, pulses = []):
+rows += 1
+columns += 1
+
+
+def create_pulse(step_time, pulse_vol, time_unit, pulses, idx):
     
     insert_p = False
     concatenated = False
-
-    if not pulses:	# empty list
+  
+    
+    if not pulses[idx]:	# empty list
         start_time = 0
         stop_time = 3000
         concatenated = False
 
     else:
-        start_time = (int(pulses[-2][:-1])+1) # get last time
+        start_time = int(pulses[idx][-2][:-1])+1 # get last time
         stop_time = start_time + 2000
         concatenated = True
-
+    
     for i in range(start_time, stop_time, step_time):
 
         if insert_p == False and concatenated == False:
-            pulses.append(str(i)+time_unit)
-            pulses.append('0')
-            pulses.append(str(i+(step_time-1))+time_unit)
-            pulses.append('0')
+            pulses[idx].append(str(i)+time_unit)
+            pulses[idx].append('0')
+            pulses[idx].append(str(i+(step_time-1))+time_unit)
+            pulses[idx].append('0')
             insert_p = True
             
         else:
-            pulses.append(str(i)+time_unit)
-            pulses.append(pulse_vol)
-            pulses.append(str(i+(step_time-1))+time_unit)
-            pulses.append(pulse_vol)
+            pulses[idx].append(str(i)+time_unit)
+            pulses[idx].append(pulse_vol)
+            pulses[idx].append(str(i+(step_time-1))+time_unit)
+            pulses[idx].append(pulse_vol)
             insert_p = False
             concatenated = False
 
 
-def convert_to_pulses(self, in_pulses_list = []):
+def pulses_to_string(in_pulses_list):
+    pulses = [[] for _ in range(rows*columns)]
 
-    pulses_list = []
-    for pulse in in_pulses_list:
-        if pulse.lower() == "read":
-            self.create_pulse(1000, "Read_V", self.time_units, pulses_list)
+    cnt = 0
+    for s in in_pulses_list:
+        pulse_str = s[0:s.find('(')]
+        pulse_idx = s[s.find('(')+1:s.find(')')]
+        pulse_idx = pulse_idx.split(",")
+        row,column = int(pulse_idx[0]), int(pulse_idx[1])
+        idx = columns*row + column
 
-        elif pulse.lower() == "set":
-            self.create_pulse(1000, "Set_V", self.time_units, pulses_list)
-            
-        elif pulse.lower() == "reset":
-            self.create_pulse(1000, "Reset_V", self.time_units, pulses_list)
+        
+        if pulse_str.lower() == "read":
+            create_pulse(1000, "Read_V", "n",  pulses, idx)
 
-    if not pulses_list:
+        elif pulse_str.lower() == "set":
+            create_pulse(1000, "Set_V", "n", pulses, idx)
+
+        elif pulse_str.lower() == "reset":
+            create_pulse(1000, "Reset_V", "n", pulses, idx)
+        
+
+    if not pulses:
         print("Empty list!")
         return
     
     pulses_str = ""
-    pulses_str += "V0 (r0 0) vsource type=pwl wave=[\\\n"
-    for i in range(0, len(pulses_list)-1, 2):
-        pulses_str += pulses_list[i] + '\t' + pulses_list[i+1] + '\t\\\n'
+    c = 0
+    for i in range(0, rows):
+        for j in range(0, columns):
+            pulses_str += "V{c} (r{i} c{j}) vsource type=pwl wave=[\\\n"
+            for k in range(0, len(pulses[columns*i + j])-1, 2):
+                pulses_str += pulses[columns*i + j][k] + '\t' + pulses[columns*i + j] + '\t\\\n'
+            pulses_str += ']'
+            c += 1
 
-    pulses_str += ']'
     return pulses_str
+
+p = pulses_to_string(lines)
+for a in p:
+    print(a)
+
+# read(0,0)
+# set(0,0)
+# reset(0,1)
+# read(0,1)
+# read(1,0)
+# reset(1,0)
+# set(1,1)
+# read(1,1)
+
+
+
+
+
 
    
