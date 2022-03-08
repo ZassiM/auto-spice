@@ -7,14 +7,23 @@ saveOptions options save=all currents=all
 save SINGLE.I0:OE SINGLE.I0:AE
 parameters Reset_V = 0.75, Set_V = -1.05, Read_V =  0.2
 
-subckt memristor_1T1M MemInput Output TransGate inh_bulk_n
+subckt 1T1M_ckt MemInput Output TransGate inh_bulk_n
     I0 (net03 MemInput) JART_VCM_1b_det T0=0.293 eps=17 epsphib=5.5 \
         phiBn0=0.18 phin=0.1 un=4e-06 Ndiscmax=20 Ndiscmin=0.008 \
         Ninit=0.008 Nplug=20 a=2.5e-10 ny0=2e+13 dWa=1.35 Rth0=1.572e+07 \
         rdet=4.5e-08 lcell=3 ldet=0.4 Rtheff_scaling=0.27 RseriesTiOx=650 \
         R0=719.244 Rthline=90471.5 alphaline=0.00392
     M0 (net03 TransGate Output inh_bulk_n) nmos
-ends memristor_1T1M
+ends 1T1M_ckt
+
+read(0,0),set(1,0),read(1,1),reset(2,2),read(1,2)
+
+
+I0 (c0 0 r0 0) 1T1M_ckt 
+I1 (c1 0 r0 0) 1T1M_ckt
+I2 (c0 0 r1 0) 1T1M_ckt 
+I3 (c1 0 r1 0) 1T1M_ckt 
+
 
 subckt my_ckt r0 c0
 I0 (r0 c0) JART_VCM_1b_det T0 = 0.293 eps = 17 epsphib = 5.5 phiBn0 = 0.18 phin = 0.1 un = 4e-06 Ndiscmax = 20 Ndiscmin = 0.008 Ninit = 0.008 Nplug = 20 a = 2.5e-10 ny0 = 20000000000000.0 dWa = 1.35 Rth0 = 10000000.0 rdet = 4.5e-08 lcell = 3 ldet = 0.4 Rtheff_scaling = 0.27 RseriesTiOx = 650 R0 = 719.244 Rthline = 90471.5 alphaline = 0.00392 

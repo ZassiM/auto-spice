@@ -1,9 +1,4 @@
 {
-    "xbar_size": {
-        "rows" : 1,
-        "columns": 1
-    },
-
     "var_bools": {
         "ndiscmin" : 0,
         "ndiscmax" : 0,

@@ -18,7 +18,7 @@ class parameters(object):  # base class for parameters
 
 		#self.set_default_params()
 
-	def parameters_list(self, param= {}, model_name="det", numerical_mode = "True"):
+	def parameters_list(self, param= {}, model_name="det", numerical_mode = True):
 		"""
 			Generates a string containing all the parameters for each memristor. It is used during the generation of the netlist
 			(design_ckt function) in appending the string for each instance
@@ -34,7 +34,7 @@ class parameters(object):  # base class for parameters
 				else:
 					self.device_parameters += i + " = " + i + " " 
 				if k == 5:
-					self.device_parameters += "\\\n\t"
+					self.device_parameters += "\\\n\t\t"
 					k=0
 		
 		return self.device_parameters
@@ -153,19 +153,29 @@ class parameters(object):  # base class for parameters
 
 		print(f"Stop time: {self.simulation_stop_time}s, Max step: {self.simulation_maxstep}s.\n")
 
-	def set_xbar_params(self, rows = 5, columns = 5, read_v = 0.2, set_v = -1.05, reset_v = 0.75):
+	def calculate_xbar_size(self, in_pulses_list = []):
+		rows = 0
+		columns = 0
+
+		for s in in_pulses_list:
+			a = s[s.find('(')+1:s.find(')')]
+			values = a.split(",")
+			row,column = int(values[0]), int(values[1])
+
+			if(row > rows): rows = row
+			if(column > columns): columns = column
+
+		self.rows = rows
+		self.columns = columns
+
+	def set_xbar_params(self, read_v = 0.2, set_v = -1.05, reset_v = 0.75):
 		"""
 			initilize the cross bar based on the number of input
 		"""
 
-		self.rows = rows
-		self.columns = columns
 		self.read_v = read_v
 		self.set_v = set_v
 		self.reset_v = reset_v
-
-		print(f"{self.rows}x{self.columns} crossbar generated.\n")
-		return (self.rows,self.columns)
 
 	def set_variablity(self, Nmin=False, Nmax=False, rdet=False, ldet=False):
 		"""

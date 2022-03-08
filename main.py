@@ -1,6 +1,6 @@
 from src.autospice.ckt_gen import netlist_design
 import json
-import pandas as pd
+#import pandas as pd
 import os
 
 """
@@ -35,8 +35,6 @@ read_v, set_v, reset_v = 0,0,0
 with open('config.json', 'r') as f:
 	config = json.load(f)
 
-	rows, columns = config['xbar_size']['rows'], config['xbar_size']['columns']	# read rows and columns
-
 	nmin_b, nmax_b, ldet_b, rdet_b = config['var_bools']['ndiscmin'], config['var_bools']['ndiscmax'], config['var_bools']['ldet'], config['var_bools']['rdet']	# create dict with variability params bools
 
 	sim_type, stop_time, max_step = config['sim_params']['type'], config['sim_params']['stop_time'], config['sim_params']['max_step']	# tune the simulation parameters  - duration of simulation and step you want to take
@@ -48,32 +46,19 @@ with open('config.json', 'r') as f:
 	read_v, set_v, reset_v = config['sim_params']['read_v'], config['sim_params']['set_v'], config['sim_params']['reset_v']
 
 
+pulses = open("pulses.txt", "r")
+in_pulses_list = list(line for line in (l.strip() for l in pulses) if line)
+ckt.calculate_xbar_size(in_pulses_list)
 
-ckt.set_xbar_params(rows, columns, read_v, set_v, reset_v)
+ckt.set_xbar_params(read_v, set_v, reset_v)
 ckt.set_simulation_params(sim_type, stop_time, max_step)
 var_bools = ckt.set_variablity(Nmin = nmin_b, Nmax = nmax_b, ldet = ldet_b, rdet = rdet_b)	# creates a dict for checking if the variabilities for each parameters are set
 var_param = ckt.update_param(static_param_sim, mean_sigma, var_bools)	# update the parameters of the memristors in case the var_bools are set
 
-#check if single memristor or xbar to read appropriate csv file
-if rows>1 or columns>1: xbar_mode = True #crossbar
-else: single_mode = True #single memristor (rows=columns=1)
+
+ckt.gen_netlist_single(static_param, in_pulses_list, out_file_name, memristor_model_path, transistor_model_path)	# create spectre netlist using the parameters set before and the static and variab parameters
 
 
-if single_mode:
-	csv_pulses = pd.read_csv('pulses_single.csv',header=None)
-	in_pulses_list = csv_pulses.values.tolist()[0]
-	ckt.gen_netlist_single(static_param, in_pulses_list, out_file_name, memristor_model_path, transistor_model_path)	# create spectre netlist using the parameters set before and the static and variab parameters
-
-
-else:
-	print("TO DO")
-	#to do, xbar...
-
-	# cross_bar = ckt.set_cross_bar_params(rows, columns)	# set xbar size
-
-	# ckt.set_input_voltages(volt_r, volt_c)	# set input voltages using the list read by the file
-
-	# #ckt.create_set_reset_pulses(-0.75, 1.5, 0.2)	# parameters: set, reset, read voltages
 
 
 

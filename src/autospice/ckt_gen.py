@@ -164,7 +164,23 @@ class netlist_design(parameters):
 		return pulses_str
 
 
+	def calculate_xbar_size(self, in_pulses_list = []):
+		rows = 0
+		columns = 0
+
+		for s in in_pulses_list:
+			a = s[s.find('(')+1:s.find(')')]
+			values = a.split(",")
+			row,column = int(values[0]), int(values[1])
+
+			if(row > rows): rows = row
+			if(column > columns): columns = column
 		
+		self.rows = rows
+		self.columns = columns
+
+
+
 	def gen_netlist_single(self,static_param= {}, pulses = [], file_name = "", memristor_model_path = "", transistor_model_path = ""):
 		'''
 		Three parts:
@@ -179,6 +195,7 @@ class netlist_design(parameters):
 		str_param = ""
 		str_ckt = ""
 		str_pulses = ""
+		str_instances = ""
 
 		str_param += "global 0\n"
 		str_param += "ahdl_include " + "\"" + memristor_model_path + "\"" + "\n"
@@ -188,7 +205,7 @@ class netlist_design(parameters):
 		str_param += f"saveOptions options save=all currents=all\n"
 		str_param += f"save {ckt_name}.I0:OE {ckt_name}.I0:AE\n"
 		str_param += f"parameters Read_V = {self.read_v} Set_V = {self.set_v} Reset_V = {self.reset_v}\n"
-		str_param += "parameters " + self.parameters_list(param=static_param) + "\n\n"
+		str_param += "parameters " + self.parameters_list(param=static_param) + "\n\n\n"
 
 
 		# subckt memristor_1T1M MemInput Output TransGate inh_bulk_n
@@ -202,24 +219,24 @@ class netlist_design(parameters):
 
 		str_ckt += "subckt 1T1M_ckt MemInput Output TransGate inh_bulk_n\n"
 		str_ckt += f"\tM0 (net03 MemInput) {self.memristor_model}"
-		str_ckt += "\t" + self.parameters_list(param=static_param) + "\n"
+		str_ckt += "\t" + self.parameters_list(param=static_param, numerical_mode = False) + "\n"
 		str_ckt += f"\tT0 (net03 TransGate Output inh_bulk_n) {self.transistor_model}\n"
-		str_ckt += "ends 1T1M_ckt\n\n"
+		str_ckt += "ends 1T1M_ckt\n\n\n"
 
-		# str_ckt += "subckt my_ckt r0 c0\n"
-		# str_ckt += f"I0 (r0 c0) {self.memristor_model} "		#TO DO: device model not hard coded"
-		# str_ckt += self.parameters_list(param=static_param) + "\n"
-		# str_ckt += "ends my_ckt\n"
-		# str_ckt += f"{ckt_name} (r0 c0) my_ckt\n\n"
+		k = 0
+		for i in range(0, self.rows):
+			for j in range(0, self.columns):
+				str_instances += f"I{k} (c{j} 0 r{i} 0) 1T1M_ckt\n"
+				k += 1
 
-		str_pulses += self.convert_to_pulses(pulses)
-		str_pulses += "\nV1 (c0  0) vsource dc=0\n\n"
+		#str_pulses += self.convert_to_pulses(pulses)
+		str_pulses += "\nV1 (c0  0) vsource dc=0\n\n\n"
 
-		to_be_written = str_param + str_ckt + str_pulses
-
+		to_be_written = str_param + str_ckt + str_instances + str_pulses
 		file_ = open(file_name,"w")
 		file_.write(to_be_written)
 		print(f"Netlist, model path and simulation parameters written to \"{file_name}\"\n")
+		print(self.rows, self.columns)
 
 
 

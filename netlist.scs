@@ -5,45 +5,43 @@ simulatorOptions options vabstol=1e-6 iabstol=1e-12 temp=27 tnom=27 gmin=1e-12
 trans tran stop=7000n errpreset=conservative maxstep =10n
 saveOptions options save=all currents=all
 save SINGLE.I0:OE SINGLE.I0:AE
-parameters Read_V = 0.5 Set_V = -1.078 Reset_V = 0.75
+parameters Read_V = 0.2 Set_V = -1.05 Reset_V = 0.75
 parameters T0 = 0.293 eps = 17 epsphib = 5.5 phiBn0 = 0.18 phin = 0.1 \
-	un = 4e-06 Ndiscmax = 20 Ndiscmin = 0.008 Ninit = 0.008 Nplug = 20 \
-	a = 2.5e-10 ny0 = 20000000000000.0 dWa = 1.35 Rth0 = 10000000.0 rdet = 4.5e-08 \
-	lcell = 3 ldet = 0.4 Rtheff_scaling = 0.27 RseriesTiOx = 650 R0 = 719.244 \
-	Rthline = 90471.5 alphaline = 0.00392 
+		un = 4e-06 Ndiscmax = 20 Ndiscmin = 0.008 Ninit = 0.008 Nplug = 20 \
+		a = 2.5e-10 ny0 = 20000000000000.0 dWa = 1.35 Rth0 = 10000000.0 rdet = 4.5e-08 \
+		lcell = 3 ldet = 0.4 Rtheff_scaling = 0.27 RseriesTiOx = 650 R0 = 719.244 \
+		Rthline = 90471.5 alphaline = 0.00392 
+
 
 subckt 1T1M_ckt MemInput Output TransGate inh_bulk_n
-	M0 (net03 MemInput) JART_VCM_1b_det	T0 = 0.293 eps = 17 epsphib = 5.5 phiBn0 = 0.18 phin = 0.1 \
-	un = 4e-06 Ndiscmax = 20 Ndiscmin = 0.008 Ninit = 0.008 Nplug = 20 \
-	a = 2.5e-10 ny0 = 20000000000000.0 dWa = 1.35 Rth0 = 10000000.0 rdet = 4.5e-08 \
-	lcell = 3 ldet = 0.4 Rtheff_scaling = 0.27 RseriesTiOx = 650 R0 = 719.244 \
-	Rthline = 90471.5 alphaline = 0.00392 
+	M0 (net03 MemInput) JART_VCM_1b_det	T0 = T0 eps = eps epsphib = epsphib phiBn0 = phiBn0 phin = phin \
+		un = un Ndiscmax = Ndiscmax Ndiscmin = Ndiscmin Ninit = Ninit Nplug = Nplug \
+		a = a ny0 = ny0 dWa = dWa Rth0 = Rth0 rdet = rdet \
+		lcell = lcell ldet = ldet Rtheff_scaling = Rtheff_scaling RseriesTiOx = RseriesTiOx R0 = R0 \
+		Rthline = Rthline alphaline = alphaline 
 	T0 (net03 TransGate Output inh_bulk_n) nmos
 ends 1T1M_ckt
 
-V0 (r0 0) vsource type=pwl wave=[\
-0n	0	\
-999n	0	\
-1000n	Read_V	\
-1999n	Read_V	\
-2000n	0	\
-2999n	0	\
-3000n	Set_V	\
-3999n	Set_V	\
-4000n	0	\
-4999n	0	\
-5000n	Read_V	\
-5999n	Read_V	\
-6000n	0	\
-6999n	0	\
-7000n	Reset_V	\
-7999n	Reset_V	\
-8000n	0	\
-8999n	0	\
-9000n	Read_V	\
-9999n	Read_V	\
-10000n	0	\
-10999n	0	\
-]
+
+I0 (c0 0 r0 0) 1T1M_ckt
+I1 (c1 0 r0 0) 1T1M_ckt
+I2 (c2 0 r0 0) 1T1M_ckt
+I3 (c3 0 r0 0) 1T1M_ckt
+I4 (c4 0 r0 0) 1T1M_ckt
+I5 (c5 0 r0 0) 1T1M_ckt
+I6 (c0 0 r1 0) 1T1M_ckt
+I7 (c1 0 r1 0) 1T1M_ckt
+I8 (c2 0 r1 0) 1T1M_ckt
+I9 (c3 0 r1 0) 1T1M_ckt
+I10 (c4 0 r1 0) 1T1M_ckt
+I11 (c5 0 r1 0) 1T1M_ckt
+I12 (c0 0 r2 0) 1T1M_ckt
+I13 (c1 0 r2 0) 1T1M_ckt
+I14 (c2 0 r2 0) 1T1M_ckt
+I15 (c3 0 r2 0) 1T1M_ckt
+I16 (c4 0 r2 0) 1T1M_ckt
+I17 (c5 0 r2 0) 1T1M_ckt
+
 V1 (c0  0) vsource dc=0
+
 
