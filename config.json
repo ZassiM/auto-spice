@@ -13,9 +13,10 @@
 
     "sim_params": {
         "type" : "tran",
-        "stop_time" : "10u",
-        "max_step" : "1u",
-        "model_file": "JART_VCM_v1b.va",
+        "stop_time" : "7000n",
+        "max_step" : "10n",
+        "memristor_model_file": "JART_VCM_v1b.va",
+        "transistor_model_file" : "90nm_bulk.pm",
         "read_v": 0.2,
         "set_v": -1.05,
         "reset_v": 0.75

@@ -9,7 +9,8 @@ This is the main function which defined the flow of code by calling different cl
 print()
 
 out_file_name = "netlist.scs" # file name of netlist
-model_path =os.getcwd() + '/deps/JART-memristor-models/' # change this path according to local path
+memristor_model_path = os.getcwd() + '/deps/JART-memristor-models/' # change this path according to local path
+transistor_model_path = os.getcwd() + '/deps/transistor-models/'
 ckt = netlist_design()  # object of the netlist class
 
 mean_sigma = { "Ndiscmin": (8e-03, 2e-3), "Ndiscmax": (20, 1), "lnew": (0.4, 0.04), "rnew": (45e-09, 5e-09)}	# mean and sigma of each variablity parameter
@@ -17,9 +18,9 @@ mean_sigma = { "Ndiscmin": (8e-03, 2e-3), "Ndiscmax": (20, 1), "lnew": (0.4, 0.0
 static_param_sim = " eps = 17 epsphib = 5.5 Ndiscmin=0.008"	# static parameters which are required for internal calculation
 
 # static parameters value. 
-static_param = {"T0":0.293,"eps": 17,"epsphib":5.5,"phibn0":0.18, "phin":0.1,"un":4e-06,
-		 "Ndiscmax":20,"Ndiscmin": 0.008,"Ninit": "Ndiscmin","Nplug": 20,
-		 "a": 2.5e-10,"nyo": 2e+13, "dWa": 1.35, "Rth0": 10e+06,
+static_param = {"T0":0.293,"eps": 17,"epsphib":5.5,"phiBn0":0.18, "phin":0.1,"un":4e-06,
+		 "Ndiscmax":20,"Ndiscmin": 0.008,"Ninit": 0.008, "Nplug": 20,
+		 "a": 2.5e-10,"ny0": 2e+13, "dWa": 1.35, "Rth0": 10e+06,
 		 "rdet": 45e-09, 'lcell': 3, 'ldet': 0.4,
 		 "Rtheff_scaling": 0.27, "RseriesTiOx": 650, "R0": 719.244,
 	     'Rthline': 90471.5, 'alphaline': 0.00392}
@@ -40,25 +41,13 @@ with open('config.json', 'r') as f:
 
 	sim_type, stop_time, max_step = config['sim_params']['type'], config['sim_params']['stop_time'], config['sim_params']['max_step']	# tune the simulation parameters  - duration of simulation and step you want to take
 
-	model_path += config['sim_params']['model_file']
+	memristor_model_path += config['sim_params']['memristor_model_file']
+
+	transistor_model_path += config['sim_params']['transistor_model_file']
 
 	read_v, set_v, reset_v = config['sim_params']['read_v'], config['sim_params']['set_v'], config['sim_params']['reset_v']
 
 
-'''
-pulses = pd.read_csv('pulses.csv',skip_blank_lines=False)
-
-pulses_list = pulses.values.tolist()
-to_col = 0
-for r in pulses_list:
-	if str(r[0]) == 'nan':
-		to_col = 1
-		continue
-	if to_col == 0:
-		volt_r.append(r)
-	else:
-		volt_c.append(r)
-'''
 
 ckt.set_xbar_params(rows, columns, read_v, set_v, reset_v)
 ckt.set_simulation_params(sim_type, stop_time, max_step)
@@ -66,19 +55,14 @@ var_bools = ckt.set_variablity(Nmin = nmin_b, Nmax = nmax_b, ldet = ldet_b, rdet
 var_param = ckt.update_param(static_param_sim, mean_sigma, var_bools)	# update the parameters of the memristors in case the var_bools are set
 
 #check if single memristor or xbar to read appropriate csv file
-if rows>1 or columns>1: #xbar
-	xbar_mode = True
+if rows>1 or columns>1: xbar_mode = True #crossbar
+else: single_mode = True #single memristor (rows=columns=1)
 
-else: #single memristor (rows=columns=1)
-	single_mode = True
-	
 
 if single_mode:
-	in_pulses_list = ['read','set','read','reset','read']  #for now hardcoded, but WITH FILE!!
-
-	ckt.gen_netlist_single(static_param, in_pulses_list, out_file_name, model_path)	# create spectre netlist using the parameters set before and the static and variab parameters
-
-
+	csv_pulses = pd.read_csv('pulses_single.csv',header=None)
+	in_pulses_list = csv_pulses.values.tolist()[0]
+	ckt.gen_netlist_single(static_param, in_pulses_list, out_file_name, memristor_model_path, transistor_model_path)	# create spectre netlist using the parameters set before and the static and variab parameters
 
 
 else:
@@ -97,4 +81,4 @@ else:
 
 # ckt.set_simulation_params(sim_type, stop_time, max_step) # tune the simulator
 
-# ckt.write_into_file(out_file_name, model_path, netlist)	# write the netlist and the sim configutation into the scs file 
+# ckt.write_into_file(out_file_name, memristor_memristor_model_path, netlist)	# write the netlist and the sim configutation into the scs file 

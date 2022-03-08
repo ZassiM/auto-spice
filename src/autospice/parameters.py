@@ -10,24 +10,32 @@ class parameters(object):  # base class for parameters
 			print("simulation needs to be set = spectre")
 			exit()
 		if device =="var":
-			self.device_model= "JART_VCM_1b_VAR"
-		
+			self.memristor_model= "JART_VCM_1b_VAR"
 		else:
-			self.device_model= "JART_VCM_1b_det"
+			self.memristor_model= "JART_VCM_1b_det"
+		
+		self.transistor_model = "nmos"
 
 		#self.set_default_params()
 
-	def set_device_parameters(self, param= {}, model_name="det"):
+	def parameters_list(self, param= {}, model_name="det", numerical_mode = "True"):
 		"""
 			Generates a string containing all the parameters for each memristor. It is used during the generation of the netlist
 			(design_ckt function) in appending the string for each instance
 
 		"""
-
 		self.device_parameters = ""
+		k = 0
 		if model_name=="var" or model_name == "det":
 			for i in param:
-				self.device_parameters+= i + " = " + str(param[i]) + " "   #concatinate the string according to each parameter
+				k += 1
+				if numerical_mode:
+					self.device_parameters += i + " = " + str(param[i]) + " "   
+				else:
+					self.device_parameters += i + " = " + i + " " 
+				if k == 5:
+					self.device_parameters += "\\\n\t"
+					k=0
 		
 		return self.device_parameters
 
@@ -61,7 +69,7 @@ class parameters(object):  # base class for parameters
 		Set all the parameters to default
 
 		"""
-		self.set_device_parameters()
+		self.parameters_list()
 		self.set_cross_bar_params()
 		self.set_input_voltages()
 		self.set_simulation_params()
@@ -123,8 +131,6 @@ class parameters(object):  # base class for parameters
 			self.fall_time_c.append(v[6])
 		
 		print("Voltage pulses correctly added.\n")
-
-
 
 
 	def set_simulation_params(self, type_ = "tran", stop_time = "5u", maxstep = "1u"):

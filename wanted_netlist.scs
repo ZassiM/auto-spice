@@ -1,47 +1,49 @@
-* Read - Set - Read - Reset - Read
 global 0
-ahdl_include "/net/home/zahr/Documents/Gitlab/auto-spice/deps/JART-memristor-models/JART_VCM_v1b.va"
+ahdl_include "C:\Users\wasso\Desktop\HiWi\Gitlab\auto-spice/deps/JART-memristor-models/JART_VCM_v1b.va"
+ahdl_include "C:\Users\wasso\Desktop\HiWi\Gitlab\auto-spice/deps/JART-memristor-models/nmos.va" 
 simulatorOptions options vabstol=1e-6 iabstol=1e-12 temp=27 tnom=27 gmin=1e-12
-trans tran stop=7u errpreset=conservative maxstep=1e-9
-saveOptions options save=all currents=all save XBAR.I0:OE XBAR.I0:AE
+trans tran stop=7000n errpreset=conservative maxstep =10n
+saveOptions options save=all currents=all
+save SINGLE.I0:OE SINGLE.I0:AE
+parameters Reset_V = 0.75, Set_V = -1.05, Read_V =  0.2
 
-subckt my_ckt r0 c0 
-I0 (r0 c0) JART_VCM_1b_det T0=0.293 \
-eps=17 epsphib=5.5 phiBn0=0.18 \
-phin=0.1 un=4e-06 Ndiscmax=20 Ndiscmin=0.008 Ninit=0.008 Nplug=20 \
-a=2.5e-10 ny0=2e+13 dWa=1.35 Rth0=10e6 rdet=45e-9 lcell=3 \
-ldet=0.4 Rtheff_scaling=0.27 RseriesTiOx=650 R0=719.244 \
-Rthline=90471.5 alphaline=0.00392
+subckt memristor_1T1M MemInput Output TransGate inh_bulk_n
+    I0 (net03 MemInput) JART_VCM_1b_det T0=0.293 eps=17 epsphib=5.5 \
+        phiBn0=0.18 phin=0.1 un=4e-06 Ndiscmax=20 Ndiscmin=0.008 \
+        Ninit=0.008 Nplug=20 a=2.5e-10 ny0=2e+13 dWa=1.35 Rth0=1.572e+07 \
+        rdet=4.5e-08 lcell=3 ldet=0.4 Rtheff_scaling=0.27 RseriesTiOx=650 \
+        R0=719.244 Rthline=90471.5 alphaline=0.00392
+    M0 (net03 TransGate Output inh_bulk_n) nmos
+ends memristor_1T1M
+
+subckt my_ckt r0 c0
+I0 (r0 c0) JART_VCM_1b_det T0 = 0.293 eps = 17 epsphib = 5.5 phiBn0 = 0.18 phin = 0.1 un = 4e-06 Ndiscmax = 20 Ndiscmin = 0.008 Ninit = 0.008 Nplug = 20 a = 2.5e-10 ny0 = 20000000000000.0 dWa = 1.35 Rth0 = 10000000.0 rdet = 4.5e-08 lcell = 3 ldet = 0.4 Rtheff_scaling = 0.27 RseriesTiOx = 650 R0 = 719.244 Rthline = 90471.5 alphaline = 0.00392 
 ends my_ckt
-XBAR (r0 c0 ) my_ckt
+SINGLE (r0 c0) my_ckt
 
-* triangle
-* V0 (r0 0) vsource type=pwl wave=[ 0 0 1.5 -1.5 3 0 4.5 1.5 6 0 ]
-* V0 (c0 0) vsource type=pwl wave=[ 0 0 1.5ms -0.7 3ms 0 4.5ms 1.6 6ms 0 ]
-
-* zahr set/reset
-* V0 (AE 0) vsource type=pwl wave=[ 0 0 0.9 0 1 0.2 1.9 0.2 2 0 2.9 0 3 -0.75 3.9 -0.75 4 0 4.9 0 5 0.2 5.9 0.2 6 0 6.9 0 7 1.5 7.9 1.5 8 0 8.9 0 9 0.2 9.9 0.2 10 0 11 0]
-
-*pwl
 V0 (r0 0) vsource type=pwl wave=[\
-0      0    \
-999n   0    \
-1000n  0.2  \
-1999n  0.2  \
-2000n  0    \
-2999n  0    \
-3000n -1.05 \
-4000n -1.05 \
-4001n  0    \
-4999n  0    \
-5000n  0.2  \
-5999n  0.2  \
-6000n  0    \
+0n	0	\
+999n	0	\
+1000n	Read_V	\
+1999n	Read_V	\
+2000n	0	\
+2999n	0	\
+3000n	Set_V	\
+3999n	Set_V	\
+4000n	0	\
+4999n	0	\
+5000n	Read_V	\
+5999n	Read_V	\
+6000n	0	\
+6999n	0	\
+7000n	Reset_V	\
+7999n	0.75	\
+8000n	0	\
+8999n	0	\
+9000n	Read_V	\
+9999n	Read_V	\
+10000n	0	\
+10999n	0	\
 ]
 V1 (c0  0) vsource dc=0
-
-
-* srjt V0 (r0  0) vsource type=pulse val0=-1.4 val1=1.2 period=200n width=50n rise=25n fall=25n 
-* zahr V0 (r0 0) vsource type=pwl wave=[ 0 0 0.9 0 1 0.2 1.9 0.2 2 0 2.9 0 3 -0.75 3.9 -0.75 4 0 4.9 0 5 0.2 5.9 0.2 6 0 6.9 0 7 1.5 7.9 1.5 8 0 8.9 0 9 0.2 9.9 0.2 10 0 11 0]
-
 

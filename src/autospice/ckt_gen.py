@@ -7,7 +7,7 @@ class netlist_design(parameters):
 	"""docstring for netlist_design"""
 	def __init__(self):
 		parameters.__init__(self)
-		if self.device_model == "JART_VCM_1b_det":  #only deterministic model - no code for cycle to variation - just simualtion with variation
+		if self.memristor_model == "JART_VCM_1b_det":  #only deterministic model - no code for cycle to variation - just simualtion with variation
 			self.static_parameters = " T0=T0 eps=esp epsphib=epsphib phiBn0=phiBn0 phin=phin un=un Nplug=Nplug \ \n a=a ny0=ny0 dWa=dWa Rth0=Rth0 Ninit=Ndiscmin rdet=rdet lcell=lcell \ \n ldet=ldet Rtheff_scaling=Rtheff_scaling RseriesTiOx=RseriesTiOx R0=R0 \ \n"
 			self.variablity = "Ndiscmax={} Ndiscmin={} rdet={} ldet={}" # in case want to change parameter there are 4 variablity params
 		else:   # use variablity model 
@@ -87,10 +87,10 @@ class netlist_design(parameters):
 					static_param[value] = varing_dict_[value]
 					
 				# generate string for each instance with list of parameters from static_param
-				device_parameter_including_variablity = self.set_device_parameters(param=static_param)
+				device_parameter_including_variablity = self.parameters_list(param=static_param)
 				
 				# create instance of device
-				instance += "I"+iteration +" (r{} c{}) ".format(rows,cols) + self.device_model + " " + device_parameter_including_variablity + "\n"
+				instance += "I"+iteration +" (r{} c{}) ".format(rows,cols) + self.memristor_model + " " + device_parameter_including_variablity + "\n"
 
 				# save all the current fro debugging
 				all_current += "XBAR.I{}:OE XBAR.I{}:AE".format(iteration,iteration) 
@@ -131,9 +131,9 @@ class netlist_design(parameters):
 				
 			else:
 				pulses.append(str(i)+time_unit)
-				pulses.append(str(pulse_vol))
+				pulses.append(pulse_vol)
 				pulses.append(str(i+(step_time-1))+time_unit)
-				pulses.append(str(pulse_vol))
+				pulses.append(pulse_vol)
 				insert_p = False
 				concatenated = False
 
@@ -143,13 +143,13 @@ class netlist_design(parameters):
 		pulses_list = []
 		for pulse in in_pulses_list:
 			if pulse.lower() == "read":
-				self.create_pulse(1000, self.read_v, self.time_units, pulses_list)
+				self.create_pulse(1000, "Read_V", self.time_units, pulses_list)
 
 			elif pulse.lower() == "set":
-				self.create_pulse(1000, self.set_v, self.time_units, pulses_list)
+				self.create_pulse(1000, "Set_V", self.time_units, pulses_list)
 				
 			elif pulse.lower() == "reset":
-				self.create_pulse(1000, self.reset_v, self.time_units, pulses_list)
+				self.create_pulse(1000, "Reset_V", self.time_units, pulses_list)
 
 		if not pulses_list:
 			print("Empty list!")
@@ -165,7 +165,7 @@ class netlist_design(parameters):
 
 
 		
-	def gen_netlist_single(self,static_param= {}, pulses = [], file_name = "", model_path = ""):
+	def gen_netlist_single(self,static_param= {}, pulses = [], file_name = "", memristor_model_path = "", transistor_model_path = ""):
 		'''
 		Three parts:
 		1) Global params, sim params, simul options
@@ -173,6 +173,7 @@ class netlist_design(parameters):
 		3) Pulses
 		'''
 		print("Generating netlist...\n")
+		
 		ckt_name = "SINGLE"
 
 		str_param = ""
@@ -180,16 +181,36 @@ class netlist_design(parameters):
 		str_pulses = ""
 
 		str_param += "global 0\n"
-		str_param += "ahdl_include " + "\"" + model_path + "\"" + "\n"
+		str_param += "ahdl_include " + "\"" + memristor_model_path + "\"" + "\n"
+		str_param += "ahdl_include " + "\"" + transistor_model_path + "\"" + "\n" 
 		str_param += "simulatorOptions options vabstol=1e-6 iabstol=1e-12 temp=27 tnom=27 gmin=1e-12\n"
 		str_param += f"trans {self.simulation_type} stop={self.simulation_stop_time} errpreset=conservative maxstep ={self.simulation_maxstep}\n"
-		str_param += f"saveOptions options save=all currents=all {ckt_name}.I0:OE {ckt_name}.I0:AE\n\n"
+		str_param += f"saveOptions options save=all currents=all\n"
+		str_param += f"save {ckt_name}.I0:OE {ckt_name}.I0:AE\n"
+		str_param += f"parameters Read_V = {self.read_v} Set_V = {self.set_v} Reset_V = {self.reset_v}\n"
+		str_param += "parameters " + self.parameters_list(param=static_param) + "\n\n"
 
-		str_ckt += "subckt my_ckt r0 c0\n"
-		str_ckt += f"I0 (r0 c0) {self.device_model} "		#TO DO: device model not hard coded"
-		str_ckt += self.set_device_parameters(param=static_param) + "\n"
-		str_ckt += "ends my_ckt\n"
-		str_ckt += f"{ckt_name} (r0 c0) my_ckt\n\n"
+
+		# subckt memristor_1T1M MemInput Output TransGate inh_bulk_n
+		# 	I0 (net03 MemInput) JART_VCM_1b_det T0=0.293 eps=17 epsphib=5.5 \
+		# 		phiBn0=0.18 phin=0.1 un=4e-06 Ndiscmax=20 Ndiscmin=0.008 \
+		# 		Ninit=0.008 Nplug=20 a=2.5e-10 ny0=2e+13 dWa=1.35 Rth0=1.572e+07 \
+		# 		rdet=4.5e-08 lcell=3 ldet=0.4 Rtheff_scaling=0.27 RseriesTiOx=650 \
+		# 		R0=719.244 Rthline=90471.5 alphaline=0.00392
+		# 	M0 (net03 TransGate Output inh_bulk_n) nmos
+		# ends memristor_1T1M
+
+		str_ckt += "subckt 1T1M_ckt MemInput Output TransGate inh_bulk_n\n"
+		str_ckt += f"\tM0 (net03 MemInput) {self.memristor_model}"
+		str_ckt += "\t" + self.parameters_list(param=static_param) + "\n"
+		str_ckt += f"\tT0 (net03 TransGate Output inh_bulk_n) {self.transistor_model}\n"
+		str_ckt += "ends 1T1M_ckt\n\n"
+
+		# str_ckt += "subckt my_ckt r0 c0\n"
+		# str_ckt += f"I0 (r0 c0) {self.memristor_model} "		#TO DO: device model not hard coded"
+		# str_ckt += self.parameters_list(param=static_param) + "\n"
+		# str_ckt += "ends my_ckt\n"
+		# str_ckt += f"{ckt_name} (r0 c0) my_ckt\n\n"
 
 		str_pulses += self.convert_to_pulses(pulses)
 		str_pulses += "\nV1 (c0  0) vsource dc=0\n\n"
@@ -200,7 +221,6 @@ class netlist_design(parameters):
 		file_.write(to_be_written)
 		print(f"Netlist, model path and simulation parameters written to \"{file_name}\"\n")
 
-		#print(f"Netlist generated with {self.rows * self.columns} instances.\n")
 
 
 	def write_into_file(self,file_name = "auto_generated.scs", model_path = "JART_VCM_1b_verilog-var.va", to_be_written = " "):
