@@ -1,6 +1,5 @@
 import copy
 
-
 class parameters(object):  
 
 	def __init__(self, device="det", simulation = "spectre"): 
@@ -116,6 +115,7 @@ class parameters(object):
 		print(f"Stop time: {self.simulation_stop_time}s, Max step: {self.simulation_maxstep}s.\n")
 
 	def calculate_xbar_size(self, in_pulses_list = []):
+
 		rows = 0
 		columns = 0
 
@@ -123,13 +123,13 @@ class parameters(object):
 			a = s[s.find('(')+1:s.find(')')]
 			values = a.split(",")
 			row,column = int(values[0]), int(values[1])
-
+			
 			if(row > rows): rows = row
 			if(column > columns): columns = column
 
 		self.rows = rows + 1
 		self.columns = columns + 1
-
+		
 		print(f"Crossbar size: {self.rows} rows, {self.columns} columns.\n")
 
 
@@ -138,7 +138,7 @@ class parameters(object):
 		self.read_v = read_v
 		self.set_v = set_v
 		self.reset_v = reset_v
-
+		
 
 	def set_variablity(self, Nmin=False, Nmax=False, rdet=False, ldet=False):
 

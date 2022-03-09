@@ -1,5 +1,5 @@
-from src.autospice.parameters import parameters
-from src.autospice.gauss_var import gauss_dist
+from src.parameters import parameters
+from src.gauss_var import gauss_dist
 import numpy as np
 
 class netlist_design(parameters):

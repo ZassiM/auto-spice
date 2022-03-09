@@ -1,4 +1,4 @@
-from src.autospice.ckt_gen import netlist_design
+from src.ckt_gen import netlist_design
 import json
 import os
 
@@ -36,10 +36,11 @@ with open('config.json', 'r') as f:
 
 pulses = open("pulses.txt", "r")
 in_pulses_list = list(line for line in (l.strip() for l in pulses) if line)
-ckt.calculate_xbar_size(in_pulses_list)
 
+ckt.calculate_xbar_size(in_pulses_list)
 ckt.set_xbar_params(read_v, set_v, reset_v)
 ckt.set_simulation_params(sim_type, stop_time, max_step)
+
 var_bools = ckt.set_variablity(Nmin = nmin_b, Nmax = nmax_b, ldet = ldet_b, rdet = rdet_b)	
 var_param = ckt.update_param(static_param_sim, mean_sigma, var_bools)	
 
