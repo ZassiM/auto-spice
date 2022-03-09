@@ -1,10 +1,9 @@
 import copy
 
-# this file include all the parameter those can be tuned - some of them are already set to default.
 
-class parameters(object):  # base class for parameters
-	"""docstring for parameters"""
-	def __init__(self, device="det", simulation = "spectre"): #two type of device we have var (variablity) and det (deterministic)
+class parameters(object):  
+
+	def __init__(self, device="det", simulation = "spectre"): 
 		
 		if simulation !="spectre":
 			print("simulation needs to be set = spectre")
@@ -16,14 +15,9 @@ class parameters(object):  # base class for parameters
 		
 		self.transistor_model = "nmos"
 
-		#self.set_default_params()
 
 	def parameters_list(self, param= {}, model_name="det", numerical_mode = True):
-		"""
-			Generates a string containing all the parameters for each memristor. It is used during the generation of the netlist
-			(design_ckt function) in appending the string for each instance
 
-		"""
 		self.device_parameters = ""
 		k = 0
 		if model_name=="var" or model_name == "det":
@@ -39,12 +33,8 @@ class parameters(object):  # base class for parameters
 		
 		return self.device_parameters
 
-	def variablity_param(self, iteration):
-		"""
-			Returns a dictionary in case the variability bools are set for each memristor of the xbar (iteration passed as argument).
-			It is used during the generation of the netlist (design_ckt function) for updating the parameters accordingly.
 
-		"""
+	def variablity_param(self, iteration):
 
 		variablity_dict = {}
 		variablity_dict["Ninit"] = "Ndiscmin"
@@ -64,24 +54,8 @@ class parameters(object):  # base class for parameters
 
 		return variablity_dict
 
-	def set_default_params(self):
-		"""
-		Set all the parameters to default
-
-		"""
-		self.parameters_list()
-		self.set_cross_bar_params()
-		self.set_input_voltages()
-		self.set_simulation_params()
-
 	def set_input_voltages(self, volt_r = [], volt_c = []):
-		"""
 
-		It takes as input the voltage pulses description for each row and columns (which are takes as input via a csv file) and appends
-		them to the circuit parameters, in order to be used later with the design_voltage_sources function to generate a string for the netlist.
-		It checks for an eventual difference between the xbar size and the input pulses, and manages such cases.
-
-		"""
 		self.input_type_r, self.input_type_c = [], []
 		self.volt_0_r, self.volt_0_c = [], []
 		self.volt_1_r, self.volt_1_c = [], []
@@ -132,24 +106,12 @@ class parameters(object):  # base class for parameters
 		
 		print("Voltage pulses correctly added.\n")
 
-
 	def set_simulation_params(self, type_ = "tran", stop_time = "5u", maxstep = "1u"):
 
-		"""
-			Intilize all the parameters required for spectre simulation
-			input: type_ -> type of analysis (DC, tran)
-					stop_time -> simulation run time
-					maxstep -> maximum step size.
-
-					--- min step can also be set but that will create problem in evalution 
-					the solution may not converge at minimum defined time. ---
-
-		"""
 		self.simulation_stop_time = stop_time
 		self.simulation_type = type_
 		self.simulation_maxstep = maxstep
-		self.time_units = stop_time[-1] #last character
-
+		self.time_units = stop_time[-1] 
 
 		print(f"Stop time: {self.simulation_stop_time}s, Max step: {self.simulation_maxstep}s.\n")
 
@@ -168,20 +130,18 @@ class parameters(object):  # base class for parameters
 		self.rows = rows + 1
 		self.columns = columns + 1
 
+		print(f"Crossbar size: {self.rows} rows, {self.columns} columns.\n")
+
+
 	def set_xbar_params(self, read_v = 0.2, set_v = -1.05, reset_v = 0.75):
-		"""
-			initilize the cross bar based on the number of input
-		"""
 
 		self.read_v = read_v
 		self.set_v = set_v
 		self.reset_v = reset_v
 
+
 	def set_variablity(self, Nmin=False, Nmax=False, rdet=False, ldet=False):
-		"""
-			check the variablity parameters and set paraticular varilble and append it to dict
-		
-		"""
+
 		self.vary_nmin = Nmin
 		self.vary_nmax = Nmax
 		self.vary_rdet = rdet
@@ -189,18 +149,5 @@ class parameters(object):  # base class for parameters
 
 		return {"Ndiscmin": Nmin, "Ndiscmax": Nmax, "rnew": rdet,"lnew": ldet}
 
-	def copy_param(self):
-		"""
-		Returns a deep copy of itself
-		"""
-		params = copy.deepcopy(self)
-		return params
-	def print_parameters(self):
-
-		"""
-		For debugging, print the device parameters
-		"""
-
-		print ("---- device parameter values ----- \n", self.device_parameters)
 
 

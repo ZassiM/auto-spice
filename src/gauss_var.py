@@ -1,8 +1,7 @@
-# import parameters
 import numpy as np
 import matplotlib.pyplot as plt
 import random
-from src.autospice.parameters import parameters
+from src.parameters import parameters
 
 
 #this class manages the variation parameters of the single memristors

@@ -1,15 +1,15 @@
-from src.parameters import parameters
-from src.gauss_var import gauss_dist
+from src.autospice.parameters import parameters
+from src.autospice.gauss_var import gauss_dist
 import numpy as np
 
 class netlist_design(parameters):
 
 	def __init__(self):
 		parameters.__init__(self)
-		if self.memristor_model == "JART_VCM_1b_det":  #only deterministic model - no code for cycle to variation - just simualtion with variation
+		if self.memristor_model == "JART_VCM_1b_det":  
 			self.static_parameters = " T0=T0 eps=esp epsphib=epsphib phiBn0=phiBn0 phin=phin un=un Nplug=Nplug \ \n a=a ny0=ny0 dWa=dWa Rth0=Rth0 Ninit=Ndiscmin rdet=rdet lcell=lcell \ \n ldet=ldet Rtheff_scaling=Rtheff_scaling RseriesTiOx=RseriesTiOx R0=R0 \ \n"
-			self.variablity = "Ndiscmax={} Ndiscmin={} rdet={} ldet={}" # in case want to change parameter there are 4 variablity params
-		else:   # use variablity model 
+			self.variablity = "Ndiscmax={} Ndiscmin={} rdet={} ldet={}" 
+		else:    
 			self.static_parameters = " eps=eps epsphib=epsphib phibn0=phibn0 phin=phin \ \n un=un Ninit=Ndiscmin Nplug=Nplug a=a \ \n nyo=nyo dWa=dWa Rth0=Rth0 rdet=rdet  \ \n lcell=lcell ldet=ldet Rtheff_scaling=Rtheff_scaling RTiOx=RTiOx R0=R0 \ \n Rthline=90471.5 alphaline=0.00392 eps_eff=(eps)*(8.85419e-12) \ \n epsphib_eff=(epsphib)*(8.85419e-12)"
 			self.variablity = " Ndiscmax={} Ndiscmin={} lnew = {} rnew= {} " 
 
@@ -50,12 +50,13 @@ class netlist_design(parameters):
 		var_param += static_param 
 		return var_param
 
+
 	def create_pulse(self, step_time, pulse_vol, time_unit, pulses, idx):
     
 		insert_p = False
 		concatenated = False
 	
-		if not pulses[idx]:	# empty list
+		if not pulses[idx]:	
 			start_time = 0
 			stop_time = 3000
 			concatenated = False
@@ -84,7 +85,7 @@ class netlist_design(parameters):
 
 
 	def pulses_to_string(self, in_pulses_list):
-		
+
 		pulses = [[] for _ in range(self.rows*self.columns)]
 
 		for s in in_pulses_list:
@@ -96,14 +97,13 @@ class netlist_design(parameters):
 
 			if pulse_str.lower() == "read":
 				self.create_pulse(1000, "Read_V", self.time_units, pulses, idx)
-		
+				
 			elif pulse_str.lower() == "set":
 				self.create_pulse(1000, "Set_V", self.time_units, pulses, idx)
 
 			elif pulse_str.lower() == "reset":
 				self.create_pulse(1000, "Reset_V", self.time_units, pulses, idx)
 			
-
 		if not pulses:
 			print("Empty list!")
 			return
@@ -121,23 +121,6 @@ class netlist_design(parameters):
 		return pulses_str
 
 
-	def calculate_xbar_size(self, in_pulses_list = []):
-
-		rows = 0
-		columns = 0
-
-		for s in in_pulses_list:
-			a = s[s.find('(')+1:s.find(')')]
-			values = a.split(",")
-			row,column = int(values[0]), int(values[1])
-
-			if(row > rows): rows = row
-			if(column > columns): columns = column
-		
-		self.rows = rows + 1
-		self.columns = columns + 1
-
-
 	def gen_netlist(self,static_param= {}, pulses = [], file_name = "", memristor_model_path = "", transistor_model_path = ""):
 
 		print("Generating netlist...\n")
@@ -146,7 +129,7 @@ class netlist_design(parameters):
 		str_ckt = ""
 		str_instances = ""
 		str_pulses = ""
-		
+
 		str_param += "global 0\n"
 		str_param += "ahdl_include " + "\"" + memristor_model_path + "\"" + "\n"
 		str_param += "ahdl_include " + "\"" + transistor_model_path + "\"" + "\n" 

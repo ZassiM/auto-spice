@@ -1,9 +1,9 @@
 global 0
-ahdl_include "C:\Users\wasso\Desktop\HiWi\Gitlab\auto-spice/deps/JART-memristor-models/JART_VCM_v1b.va"
-ahdl_include "C:\Users\wasso\Desktop\HiWi\Gitlab\auto-spice/deps/transistor-models/90nm_bulk.pm"
+ahdl_include "C:\Users\wasso\Desktop\HiWi\Gitlab\auto-spice\deps\JART-memristor-models\JART_VCM_v1b.va"
+ahdl_include "C:\Users\wasso\Desktop\HiWi\Gitlab\auto-spice\deps\transistor-models\45nm_bulk.pm"
 simulatorOptions options vabstol=1e-6 iabstol=1e-12 temp=27 tnom=27 gmin=1e-12
 trans tran stop=7000n errpreset=conservative maxstep =10n
-saveOptions options save=all currents=all
+saveOptions options save=all currents=all saveahdlvars=all
 parameters Read_V = 0.2 Set_V = -1.05 Reset_V = 0.75
 parameters T0 = 0.293 eps = 17 epsphib = 5.5 phiBn0 = 0.18 phin = 0.1 \
 		un = 4e-06 Ndiscmax = 20 Ndiscmin = 0.008 Ninit = 0.008 Nplug = 20 \
