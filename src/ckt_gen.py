@@ -89,19 +89,17 @@ class netlist_design(parameters):
 		pulses = [[] for _ in range(self.rows*self.columns)]
 
 		for s in in_pulses_list:
-			pulse_str = s[0:s.find('(')]
-			pulse_idx = s[s.find('(')+1:s.find(')')]
-			pulse_idx = pulse_idx.split(",")
-			row,column = int(pulse_idx[0]), int(pulse_idx[1])
+			
+			row,column = int(s[1]), int(s[2])
 			idx = self.columns*row + column
 
-			if pulse_str.lower() == "read":
+			if s[0].lower() == "read":
 				self.create_pulse(1000, "Read_V", self.time_units, pulses, idx)
 				
-			elif pulse_str.lower() == "set":
+			elif s[0].lower() == "set":
 				self.create_pulse(1000, "Set_V", self.time_units, pulses, idx)
 
-			elif pulse_str.lower() == "reset":
+			elif s[0].lower() == "reset":
 				self.create_pulse(1000, "Reset_V", self.time_units, pulses, idx)
 			
 		if not pulses:
@@ -124,7 +122,7 @@ class netlist_design(parameters):
 	def gen_netlist(self,static_param= {}, pulses = [], file_name = "", memristor_model_path = "", transistor_model_path = ""):
 
 		print("Generating netlist...\n")
-
+		
 		str_param = ""
 		str_ckt = ""
 		str_instances = ""
@@ -141,9 +139,9 @@ class netlist_design(parameters):
 		str_param += "parameters " + self.parameters_list(param=static_param) + "\n\n\n"
 
 		str_ckt += "subckt 1T1M_ckt MemInput Output TransGate inh_bulk_n\n"
-		str_ckt += f"\tM0 (net03 MemInput) {self.memristor_model}"
+		str_ckt += f"\tM0 (net01 MemInput) {self.memristor_model}"
 		str_ckt += "\t" + self.parameters_list(param=static_param, numerical_mode = False) + "\n"
-		str_ckt += f"\tT0 (net03 TransGate Output inh_bulk_n) {self.transistor_model}\n"
+		str_ckt += f"\tT0 (net01 TransGate Output inh_bulk_n) {self.transistor_model}\n"
 		str_ckt += "ends 1T1M_ckt\n\n\n"
 
 		k = 0
