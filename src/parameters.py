@@ -120,9 +120,7 @@ class parameters(object):
 		columns = 0
 
 		for s in in_pulses_list:
-			a = s[s.find('(')+1:s.find(')')]
-			values = a.split(",")
-			row,column = int(values[0]), int(values[1])
+			row,column = int(s[1]), int(s[2])
 			
 			if(row > rows): rows = row
 			if(column > columns): columns = column

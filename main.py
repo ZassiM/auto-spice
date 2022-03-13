@@ -1,6 +1,8 @@
 from src.ckt_gen import netlist_design
 import json
+import csv
 import os
+
 
 
 out_file_name = "netlist.scs" 
@@ -34,8 +36,11 @@ with open('config.json', 'r') as f:
 	read_v, set_v, reset_v = config['sim_params']['read_v'], config['sim_params']['set_v'], config['sim_params']['reset_v']
 
 
-pulses = open("pulses.txt", "r")
-in_pulses_list = list(line for line in (l.strip() for l in pulses) if line)
+with open('pls.csv', 'r') as file:
+    reader = csv.reader(file)
+    in_pulses_list = list(reader)
+    in_pulses_list = filter(None, in_pulses_list)
+
 
 ckt.calculate_xbar_size(in_pulses_list)
 ckt.set_xbar_params(read_v, set_v, reset_v)

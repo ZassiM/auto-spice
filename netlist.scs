@@ -13,12 +13,12 @@ parameters T0 = 0.293 eps = 17 epsphib = 5.5 phiBn0 = 0.18 phin = 0.1 \
 
 
 subckt 1T1M_ckt MemInput Output TransGate inh_bulk_n
-	M0 (net03 MemInput) JART_VCM_1b_det	T0 = T0 eps = eps epsphib = epsphib phiBn0 = phiBn0 phin = phin \
+	M0 (net01 MemInput) JART_VCM_1b_det	T0 = T0 eps = eps epsphib = epsphib phiBn0 = phiBn0 phin = phin \
 		un = un Ndiscmax = Ndiscmax Ndiscmin = Ndiscmin Ninit = Ninit Nplug = Nplug \
 		a = a ny0 = ny0 dWa = dWa Rth0 = Rth0 rdet = rdet \
 		lcell = lcell ldet = ldet Rtheff_scaling = Rtheff_scaling RseriesTiOx = RseriesTiOx R0 = R0 \
 		Rthline = Rthline alphaline = alphaline 
-	T0 (net03 TransGate Output inh_bulk_n) nmos
+	T0 (net01 TransGate Output inh_bulk_n) nmos
 ends 1T1M_ckt
 
 
@@ -29,58 +29,14 @@ I3 (c1 0 r1 0) 1T1M_ckt
 
 
 V0 (r0 c0) vsource type=pwl wave=[\
-0n	0	\
-999n	0	\
-1000n	Read_V	\
-1999n	Read_V	\
-2000n	0	\
-2999n	0	\
-3000n	Set_V	\
-3999n	Set_V	\
-4000n	0	\
-4999n	0	\
-5000n	Reset_V	\
-5999n	Reset_V	\
-6000n	0	\
-6999n	0	\
 ]
 
 V1 (r0 c1) vsource type=pwl wave=[\
-0n	0	\
-999n	0	\
-1000n	Reset_V	\
-1999n	Reset_V	\
-2000n	0	\
-2999n	0	\
-3000n	Read_V	\
-3999n	Read_V	\
-4000n	0	\
-4999n	0	\
 ]
 
 V2 (r1 c0) vsource type=pwl wave=[\
-0n	0	\
-999n	0	\
-1000n	Read_V	\
-1999n	Read_V	\
-2000n	0	\
-2999n	0	\
-3000n	Reset_V	\
-3999n	Reset_V	\
-4000n	0	\
-4999n	0	\
 ]
 
 V3 (r1 c1) vsource type=pwl wave=[\
-0n	0	\
-999n	0	\
-1000n	Set_V	\
-1999n	Set_V	\
-2000n	0	\
-2999n	0	\
-3000n	Read_V	\
-3999n	Read_V	\
-4000n	0	\
-4999n	0	\
 ]
 
