@@ -16,7 +16,7 @@ source source_me.sh
 ### Configuration file
 
 First of all the configuration file (config.json) should be edited:
-## Simulation parameters
+#### Simulation parameters
 The first parameter (row_by_row) contains a bool which must be activated when the user wants to give row-by-row input to the rw_input.csv file. Otherwise, the user gives the input pulses one by one to each cell to the pulses.csv file.
 Then the user could change the type of simulation ("tran" is the default one), the max step, the step time and the time units. The stop time is not specified since the script calculates it dynamically. The memristor and transistor model names are specified, which can be found on the deps folder. The Rth0 parameter (thermal resistance of the Hafnium Oxide) can be changed and should be in the range between 1.5e7 and 2e7 in order to make the memristor function properly (different behaviours can be tested).
 ## Pulse voltages
