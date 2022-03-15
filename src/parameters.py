@@ -105,14 +105,17 @@ class parameters(object):
 		
 		print("Voltage pulses correctly added.\n")
 
-	def set_simulation_params(self, type_ = "tran", stop_time = "5u", maxstep = "1u"):
 
-		self.simulation_stop_time = stop_time
+	def set_simulation_params(self, type_ = "tran", step_time = "100", max_step = "1", time_units = "u", in_pulses_list = []):
+
 		self.simulation_type = type_
-		self.simulation_maxstep = maxstep
-		self.time_units = stop_time[-1] 
+		self.time_units = time_units
+		self.simulation_maxstep = str(max_step) + self.time_units
+		self.step_time = int(step_time)
+		self.simulation_stop_time = str(self.calculate_stop_time(in_pulses_list)) + self.time_units
 
-		print(f"Stop time: {self.simulation_stop_time}s, Max step: {self.simulation_maxstep}s.\n")
+
+		print(f"Stop time: {self.simulation_stop_time}s, Step time: {self.step_time}{self.time_units}s, Max step: {self.simulation_maxstep}s.\n")
 
 	def calculate_xbar_size(self, in_pulses_list = []):
 
@@ -132,7 +135,22 @@ class parameters(object):
 		print(f"Crossbar size: {self.rows} rows, {self.columns} columns.\n")
 
 
-	def set_xbar_params(self, read_v = 0.2, set_v = -1.05, reset_v = 0.75, gate_v = 1.5):
+	def calculate_stop_time(self, in_pulses_list):
+		max_stop_time = 0
+		cnt = 0
+		for i in range(0, self.rows):
+			for s in in_pulses_list:
+				if int(s[1]) == i:
+					cnt += 1
+			stop_time = (self.step_time)*2*cnt + self.step_time
+			if stop_time > max_stop_time : max_stop_time = stop_time
+
+			cnt = 0
+
+		return max_stop_time
+
+
+	def set_xbar_params(self, read_v = 0.2, set_v = -1.05, reset_v = 0.75, gate_v = 1):
 
 		self.read_v = read_v
 		self.set_v = set_v

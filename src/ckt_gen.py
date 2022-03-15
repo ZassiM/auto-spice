@@ -51,74 +51,165 @@ class netlist_design(parameters):
 		return var_param
 
 
-	def create_pulse(self, step_time, pulse_vol, time_unit, pulses):
-    
+	def create_pulse(self, step_time, pulse_vol, time_unit, WL_pulse, SEL_voltage, BL_voltage, row, column):
+
 		insert_p = False
 		concatenated = False
-	
-		if not pulses:	
-			start_time = 0
-			stop_time = 3000
-			concatenated = False
 
+		start_time_b = 0
+		stop_time_b = 3*step_time
+
+		if not WL_pulse[row]:
+			if not any(WL_pulse):
+				start_time = 0
+				stop_time = 3 * step_time
+				
+			else:
+				
+				max_start_time = 0
+				for p in WL_pulse:
+					if p:
+						s_time = int(p[-2][:-1])+1
+						if s_time > max_start_time : max_start_time = s_time
+				
+				
+				start_time = max_start_time
+				stop_time = start_time + step_time * 2
+
+		
 		else:
-			start_time = int(pulses[-2][:-1])+1 
-			stop_time = start_time + 2000
+			start_time = int(WL_pulse[row][-2][:-1])+1 
+			stop_time = start_time + step_time * 2
 			concatenated = True
+
 		
 		for i in range(start_time, stop_time, step_time):
 
 			if insert_p == False and concatenated == False:
-				pulses.append(str(i)+time_unit)
-				pulses.append('0')
-				pulses.append(str(i+(step_time-1))+time_unit)
-				pulses.append('0')
-				insert_p = True
-				
+				WL_pulse[row].append(str(i)+time_unit)
+				WL_pulse[row].append('0')
+				WL_pulse[row].append(str(i+(step_time-1))+time_unit)
+				WL_pulse[row].append('0')
+				insert_p = True		
 			else:
-				pulses.append(str(i)+time_unit)
-				pulses.append(pulse_vol)
-				pulses.append(str(i+(step_time-1))+time_unit)
-				pulses.append(pulse_vol)
+				WL_pulse[row].append(str(i)+time_unit)
+				WL_pulse[row].append(pulse_vol)
+				WL_pulse[row].append(str(i+(step_time-1))+time_unit)
+				WL_pulse[row].append(pulse_vol)
 				insert_p = False
 				concatenated = False
 
 
-	def pulses_to_string(self, in_pulses_list):
+		if not BL_voltage[column]:
+			start_time_b = 0
+			stop_time_b = 3 * step_time
+		else:
+			start_time_b = int(BL_voltage[column][-2][:-1])+1 
+			stop_time_b = start_time_b + step_time * 2
 
-		pulses = [[] for _ in range(self.rows*self.columns)]
+		for i in range(start_time_b, stop_time_b, step_time):
+
+			BL_voltage[column].append(str(i)+time_unit)
+			BL_voltage[column].append("0")
+			BL_voltage[column].append(str(i+(step_time-1))+time_unit)
+			BL_voltage[column].append("0")
+
+			for k in range(0, self.columns):
+				if k != column:
+					BL_voltage[k].append(str(i)+time_unit)
+					BL_voltage[k].append(pulse_vol)
+					BL_voltage[k].append(str(i+(step_time-1))+time_unit)
+					BL_voltage[k].append(pulse_vol)  
+
+		
+		if not SEL_voltage[row]:
+			start_time_b = 0
+			stop_time_b = 3 * step_time
+		else:
+			start_time_b = int(SEL_voltage[row][-2][:-1])+1 
+			stop_time_b = start_time_b + step_time * 2
+
+		for i in range(start_time_b, stop_time_b, step_time):
+
+			SEL_voltage[row].append(str(i)+time_unit)
+			SEL_voltage[row].append("Gate_V")
+			SEL_voltage[row].append(str(i+(step_time-1))+time_unit)
+			SEL_voltage[row].append("Gate_V")
+
+			for k in range(0, self.rows):
+				if k != row:
+					SEL_voltage[k].append(str(i)+time_unit)
+					SEL_voltage[k].append("0")
+					SEL_voltage[k].append(str(i+(step_time-1))+time_unit)
+					SEL_voltage[k].append("0")
+
+
+	def pulses_to_string(self,in_pulses_list):
+
+		WL_pulses = [[] for _ in range(self.rows)]
+		SEL_voltage = [[] for _ in range(self.rows)]
+		BL_voltage = [[] for _ in range(self.columns)]
+
+
 		for s in in_pulses_list:
 
 			row,column = int(s[1]), int(s[2])
-			idx = self.columns*row + column
 
 			if s[0].lower() == "read":
-				self.create_pulse(1000, "Read_V", self.time_units, pulses[idx])
+				self.create_pulse(self.step_time, "Read_V", "u", WL_pulses, SEL_voltage, BL_voltage, row, column)
 				
 			elif s[0].lower() == "set":
-				self.create_pulse(1000, "Set_V", self.time_units, pulses[idx])
+				self.create_pulse(self.step_time, "Set_V", "u", WL_pulses, SEL_voltage, BL_voltage, row, column)
 
 			elif s[0].lower() == "reset":
-				self.create_pulse(1000, "Reset_V", self.time_units, pulses[idx])
+				self.create_pulse(self.step_time, "Reset_V", "u", WL_pulses, SEL_voltage, BL_voltage, row, column)
 			
-		if not pulses:
+		if not WL_pulses:
 			print("Empty list!")
 			return
+		
 		
 		pulses_str = ""
 		c = 0
 		for i in range(0, self.rows):
-			for j in range(0, self.columns):
-				pulses_str += f"V{c} (r{i} c{j}) vsource type=pwl wave=[\\\n"
-				for k in range(0, len(pulses[self.columns*i + j])-1, 2):
-					pulses_str += pulses[self.columns*i + j][k] + '\t' + pulses[self.columns*i + j][k+1] + '\t\\\n'
-				pulses_str += ']\n\n'
-				c += 1
+			pulses_str += f"V_WL{i}(r{i} 0) vsource type=pwl wave=[\\\n"
+			for k in range(0, len(WL_pulses[i])-1, 2):
+				pulses_str += WL_pulses[i][k] + '\t' + WL_pulses[i][k+1] + '\t\\\n'
+			pulses_str += ']\n'
 
+			pulses_str += f"V_SEL{i}(g{i} 0) vsource type=pwl wave=[\\\n"
+			for k in range(0, len(SEL_voltage[i])-1, 2):
+				pulses_str += SEL_voltage[i][k] + '\t' + SEL_voltage[i][k+1] + '\t\\\n'
+			pulses_str += ']\n\n'
+
+
+		pulses_str += "\n\n"
+		for j in range(0, self.columns):
+			pulses_str += f"V_BL{j}(c{j} 0) vsource type=pwl wave=[\\\n"
+			for k in range(0, len(BL_voltage[j])-1, 2):
+				pulses_str += BL_voltage[j][k] + '\t' + BL_voltage[j][k+1] + '\t\\\n'
+			pulses_str += ']\n\n'
+			
+		
 		return pulses_str
 
+	def sweep_to_string(self, sweep_params):
 
-	def gen_netlist(self,static_param= {}, pulses = [], file_name = "", memristor_model_path = "", transistor_model_path = ""):
+		sweep_str = ""
+		min_g, max_g, step_g = sweep_params[0], sweep_params[1], sweep_params[2]
+
+		if max_g < min_g : step_g = -step_g
+		
+		sweep_str += "swp sweep param = Gate_V values=["
+		for i in np.arange(min_g, max_g, step_g):
+			sweep_str += str(np.round(i,2)) + " "
+
+		sweep_str = sweep_str[0:-1] + f"]{{\n\ttran tran stop = {self.simulation_stop_time} errpreset=conservative maxstep={self.simulation_maxstep}\n}}"
+
+		return sweep_str
+
+
+	def gen_netlist(self,static_param= {}, pulses = [], sweep_params = [], file_name = "", memristor_model_path = "", transistor_model_path = ""):
 
 		print("Generating netlist...\n")
 		
@@ -131,10 +222,10 @@ class netlist_design(parameters):
 		str_param += "ahdl_include " + "\"" + memristor_model_path + "\"" + "\n"
 		str_param += "include " + "\"" + transistor_model_path + "\"" + "\n" 
 		str_param += "simulatorOptions options vabstol=1e-6 iabstol=1e-12 temp=27 tnom=27 gmin=1e-12\n"
-		str_param += f"trans {self.simulation_type} stop={self.simulation_stop_time} errpreset=conservative maxstep ={self.simulation_maxstep}\n"
+		str_param += f"trans {self.simulation_type} stop = {self.simulation_stop_time} maxstep = {self.simulation_maxstep} errpreset=conservative\n"
 		str_param += f"saveOptions options save=all currents=all saveahdlvars=all\n"
 		#str_param += f"save {ckt_name}.I0:OE {ckt_name}.I0:AE\n"
-		str_param += f"parameters Read_V = {self.read_v} Set_V = {self.set_v} Reset_V = {self.reset_v} Gate_V = {self.gate_v} Ground = 0\n"
+		str_param += f"parameters Read_V = {self.read_v} Set_V = {self.set_v} Reset_V = {self.reset_v} Gate_V = {self.gate_v}\n\n"
 		str_param += "parameters " + self.parameters_list(param=static_param) + "\n\n\n"
 
 		str_ckt += "subckt TM_subckt MemInput Output TransGate Bulk\n"
@@ -146,11 +237,16 @@ class netlist_design(parameters):
 		k = 0
 		for i in range(0, self.rows):
 			for j in range(0, self.columns):
-				str_instances += f"I{k} (r{i} c{j} c{j} c{j}) TM_subckt\n"
+				str_instances += f"I{k} (r{i} c{j} g{i} c{j}) TM_subckt\n"
 				k += 1
 
 		str_pulses += "\n\n" + self.pulses_to_string(pulses)
 		#str_pulses += "\nV1 (c0  0) vsource dc=0\n\n\n"
+
+
+		if sweep_params:
+			str_pulses += self.sweep_to_string(sweep_params)
+
 
 		to_be_written = str_param + str_ckt + str_instances + str_pulses
 		file_ = open(file_name,"w")
