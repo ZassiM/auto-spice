@@ -1,0 +1,75 @@
+global 0
+ahdl_include "C:\Users\wasso\Desktop\HiWi\Gitlab\auto-spice\deps\JART-memristor-models\JART_VCM_v1b.va"
+ahdl_include "C:\Users\wasso\Desktop\HiWi\Gitlab\auto-spice\deps\transistor-models\45nm_bulk.pm"
+simulatorOptions options vabstol=1e-6 iabstol=1e-12 temp=27 tnom=27 gmin=1e-12
+trans tran stop=7000n errpreset=conservative maxstep =10n
+saveOptions options save=all currents=all saveahdlvars=all
+parameters Read_V = 0.2 Set_V = -1.05 Reset_V = 0.75 Vgate = 0.8
+parameters T0 = 0.293 eps = 17 epsphib = 5.5 phiBn0 = 0.18 phin = 0.1 \
+		un = 4e-06 Ndiscmax = 20 Ndiscmin = 0.008 Ninit = 0.008 Nplug = 20 \
+		a = 2.5e-10 ny0 = 20000000000000.0 dWa = 1.35 Rth0 = 10000000.0 rdet = 4.5e-08 \
+		lcell = 3 ldet = 0.4 Rtheff_scaling = 0.27 RseriesTiOx = 650 R0 = 719.244 \
+		Rthline = 90471.5 alphaline = 0.00392 
+
+
+subckt 1T1M_ckt MemInput Source TransGate Bulk
+	M0 (net01 MemInput) JART_VCM_1b_det	T0 = T0 eps = eps epsphib = epsphib phiBn0 = phiBn0 phin = phin \
+		un = un Ndiscmax = Ndiscmax Ndiscmin = Ndiscmin Ninit = Ninit Nplug = Nplug \
+		a = a ny0 = ny0 dWa = dWa Rth0 = Rth0 rdet = rdet \
+		lcell = lcell ldet = ldet Rtheff_scaling = Rtheff_scaling RseriesTiOx = RseriesTiOx R0 = R0 \
+		Rthline = Rthline alphaline = alphaline 
+	T0 (net01 TransGate Source Bulk) nmos
+ends 1T1M_ckt
+
+
+I0 (r0 c0 g0 0) 1T1M_ckt
+I1 (r0 c1 g0 0) 1T1M_ckt
+
+
+V0 (r0 0) vsource type=pwl wave=[\
+0n	0	\
+999n	0	\
+1000n	Set_V	\
+1999n	Set_V	\
+2000n	0	\
+2999n	0	\
+3000n	Read_V	\
+3999n	Read_V	\
+4000n	0	\
+4999n	0	\
+]
+V0c(c0 0) vsource dc=Vgate
+
+*we want to access the second memristor  (r0,c1)
+V1 (r0 0) vsource type=pwl wave=[\
+0n	0	\
+999n	0	\
+1000n	Read_V	\
+1999n	Read_V	\
+2000n	0	\
+2999n	0	\
+3000n	Set_V	\
+3999n	Set_V	\
+4000n	0	\
+4999n	0	\
+5000n	Read_V	\
+5999n	Read_V	\
+6000n	0	\
+6999n	0	\
+7000n	Reset_V	\
+7999n	Reset_V	\
+8000n	0	\
+8999n	0	\
+9000n	Read_V	\
+9999n	Read_V	\
+10000n	0	\
+10999n	0	\
+]
+
+V1g(go 0) vsource dc=Vgate
+
+V1c(c0 0) vsource dc=0
+
+
+
+

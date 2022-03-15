@@ -7,7 +7,8 @@
         "transistor_model_file" : "45nm_bulk.pm",
         "read_v": 0.2,
         "set_v": -1.05,
-        "reset_v": 0.75
+        "reset_v": 0.75,
+        "gate_v": 1.7
     },
 
     "var_bools": {

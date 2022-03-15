@@ -120,6 +120,7 @@ class parameters(object):
 		columns = 0
 
 		for s in in_pulses_list:
+			
 			row,column = int(s[1]), int(s[2])
 			
 			if(row > rows): rows = row
@@ -131,11 +132,12 @@ class parameters(object):
 		print(f"Crossbar size: {self.rows} rows, {self.columns} columns.\n")
 
 
-	def set_xbar_params(self, read_v = 0.2, set_v = -1.05, reset_v = 0.75):
+	def set_xbar_params(self, read_v = 0.2, set_v = -1.05, reset_v = 0.75, gate_v = 1.5):
 
 		self.read_v = read_v
 		self.set_v = set_v
 		self.reset_v = reset_v
+		self.gate_v = gate_v
 		
 
 	def set_variablity(self, Nmin=False, Nmax=False, rdet=False, ldet=False):

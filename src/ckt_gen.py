@@ -51,35 +51,35 @@ class netlist_design(parameters):
 		return var_param
 
 
-	def create_pulse(self, step_time, pulse_vol, time_unit, pulses, idx):
+	def create_pulse(self, step_time, pulse_vol, time_unit, pulses):
     
 		insert_p = False
 		concatenated = False
 	
-		if not pulses[idx]:	
+		if not pulses:	
 			start_time = 0
 			stop_time = 3000
 			concatenated = False
 
 		else:
-			start_time = int(pulses[idx][-2][:-1])+1 
+			start_time = int(pulses[-2][:-1])+1 
 			stop_time = start_time + 2000
 			concatenated = True
 		
 		for i in range(start_time, stop_time, step_time):
 
 			if insert_p == False and concatenated == False:
-				pulses[idx].append(str(i)+time_unit)
-				pulses[idx].append('0')
-				pulses[idx].append(str(i+(step_time-1))+time_unit)
-				pulses[idx].append('0')
+				pulses.append(str(i)+time_unit)
+				pulses.append('0')
+				pulses.append(str(i+(step_time-1))+time_unit)
+				pulses.append('0')
 				insert_p = True
 				
 			else:
-				pulses[idx].append(str(i)+time_unit)
-				pulses[idx].append(pulse_vol)
-				pulses[idx].append(str(i+(step_time-1))+time_unit)
-				pulses[idx].append(pulse_vol)
+				pulses.append(str(i)+time_unit)
+				pulses.append(pulse_vol)
+				pulses.append(str(i+(step_time-1))+time_unit)
+				pulses.append(pulse_vol)
 				insert_p = False
 				concatenated = False
 
@@ -87,20 +87,19 @@ class netlist_design(parameters):
 	def pulses_to_string(self, in_pulses_list):
 
 		pulses = [[] for _ in range(self.rows*self.columns)]
-
 		for s in in_pulses_list:
-			
+
 			row,column = int(s[1]), int(s[2])
 			idx = self.columns*row + column
 
 			if s[0].lower() == "read":
-				self.create_pulse(1000, "Read_V", self.time_units, pulses, idx)
+				self.create_pulse(1000, "Read_V", self.time_units, pulses[idx])
 				
 			elif s[0].lower() == "set":
-				self.create_pulse(1000, "Set_V", self.time_units, pulses, idx)
+				self.create_pulse(1000, "Set_V", self.time_units, pulses[idx])
 
 			elif s[0].lower() == "reset":
-				self.create_pulse(1000, "Reset_V", self.time_units, pulses, idx)
+				self.create_pulse(1000, "Reset_V", self.time_units, pulses[idx])
 			
 		if not pulses:
 			print("Empty list!")
@@ -130,24 +129,24 @@ class netlist_design(parameters):
 
 		str_param += "global 0\n"
 		str_param += "ahdl_include " + "\"" + memristor_model_path + "\"" + "\n"
-		str_param += "ahdl_include " + "\"" + transistor_model_path + "\"" + "\n" 
+		str_param += "include " + "\"" + transistor_model_path + "\"" + "\n" 
 		str_param += "simulatorOptions options vabstol=1e-6 iabstol=1e-12 temp=27 tnom=27 gmin=1e-12\n"
 		str_param += f"trans {self.simulation_type} stop={self.simulation_stop_time} errpreset=conservative maxstep ={self.simulation_maxstep}\n"
 		str_param += f"saveOptions options save=all currents=all saveahdlvars=all\n"
 		#str_param += f"save {ckt_name}.I0:OE {ckt_name}.I0:AE\n"
-		str_param += f"parameters Read_V = {self.read_v} Set_V = {self.set_v} Reset_V = {self.reset_v}\n"
+		str_param += f"parameters Read_V = {self.read_v} Set_V = {self.set_v} Reset_V = {self.reset_v} Gate_V = {self.gate_v} Ground = 0\n"
 		str_param += "parameters " + self.parameters_list(param=static_param) + "\n\n\n"
 
-		str_ckt += "subckt 1T1M_ckt MemInput Output TransGate inh_bulk_n\n"
-		str_ckt += f"\tM0 (net01 MemInput) {self.memristor_model}"
+		str_ckt += "subckt TM_subckt MemInput Output TransGate Bulk\n"
+		str_ckt += f"\tM0 (net MemInput) {self.memristor_model}"
 		str_ckt += "\t" + self.parameters_list(param=static_param, numerical_mode = False) + "\n"
-		str_ckt += f"\tT0 (net01 TransGate Output inh_bulk_n) {self.transistor_model}\n"
-		str_ckt += "ends 1T1M_ckt\n\n\n"
+		str_ckt += f"\tT0 (net TransGate Output Bulk) {self.transistor_model}\n"
+		str_ckt += "ends TM_subckt\n\n\n"
 
 		k = 0
 		for i in range(0, self.rows):
 			for j in range(0, self.columns):
-				str_instances += f"I{k} (c{j} 0 r{i} 0) 1T1M_ckt\n"
+				str_instances += f"I{k} (r{i} c{j} c{j} c{j}) TM_subckt\n"
 				k += 1
 
 		str_pulses += "\n\n" + self.pulses_to_string(pulses)
