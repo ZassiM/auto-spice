@@ -1,4 +1,4 @@
-from src.parameters import parameters
+from src.netlist_params import parameters
 from src.gauss_var import gauss_dist
 import numpy as np
 
@@ -7,10 +7,10 @@ class netlist_design(parameters):
 	def __init__(self):
 		parameters.__init__(self)
 		if self.memristor_model == "JART_VCM_1b_det":  
-			self.static_parameters = " T0=T0 eps=esp epsphib=epsphib phiBn0=phiBn0 phin=phin un=un Nplug=Nplug \ \n a=a ny0=ny0 dWa=dWa Rth0=Rth0 Ninit=Ndiscmin rdet=rdet lcell=lcell \ \n ldet=ldet Rtheff_scaling=Rtheff_scaling RseriesTiOx=RseriesTiOx R0=R0 \ \n"
+			self.memristor_paramseters = " T0=T0 eps=esp epsphib=epsphib phiBn0=phiBn0 phin=phin un=un Nplug=Nplug \ \n a=a ny0=ny0 dWa=dWa Rth0=Rth0 Ninit=Ndiscmin rdet=rdet lcell=lcell \ \n ldet=ldet Rtheff_scaling=Rtheff_scaling RseriesTiOx=RseriesTiOx R0=R0 \ \n"
 			self.variablity = "Ndiscmax={} Ndiscmin={} rdet={} ldet={}" 
 		else:    
-			self.static_parameters = " eps=eps epsphib=epsphib phibn0=phibn0 phin=phin \ \n un=un Ninit=Ndiscmin Nplug=Nplug a=a \ \n nyo=nyo dWa=dWa Rth0=Rth0 rdet=rdet  \ \n lcell=lcell ldet=ldet Rtheff_scaling=Rtheff_scaling RTiOx=RTiOx R0=R0 \ \n Rthline=90471.5 alphaline=0.00392 eps_eff=(eps)*(8.85419e-12) \ \n epsphib_eff=(epsphib)*(8.85419e-12)"
+			self.memristor_paramseters = " eps=eps epsphib=epsphib phibn0=phibn0 phin=phin \ \n un=un Ninit=Ndiscmin Nplug=Nplug a=a \ \n nyo=nyo dWa=dWa Rth0=Rth0 rdet=rdet  \ \n lcell=lcell ldet=ldet Rtheff_scaling=Rtheff_scaling RTiOx=RTiOx R0=R0 \ \n Rthline=90471.5 alphaline=0.00392 eps_eff=(eps)*(8.85419e-12) \ \n epsphib_eff=(epsphib)*(8.85419e-12)"
 			self.variablity = " Ndiscmax={} Ndiscmin={} lnew = {} rnew= {} " 
 
 	def design_voltage_sources(self):
@@ -30,7 +30,7 @@ class netlist_design(parameters):
 		return voltages_name,voltage_source
 
 
-	def update_param(self, static_param = "", mean_sigma_param = {}, bools_var = {}):
+	def update_param(self, mean_sigma_param = {}, bools_var = {}):
 
 		var_param = "parameters "
 		d_to_d_vardict = {}
@@ -47,7 +47,7 @@ class netlist_design(parameters):
 			var_param += gauss.make_paramset(d_to_d_vardict) 
 			print(f"{len(d_to_d_vardict)} parameters are updated due to variation.\n")
 	
-		var_param += static_param 
+		
 		return var_param
 
 
@@ -65,7 +65,6 @@ class netlist_design(parameters):
 				stop_time = 3 * step_time
 				
 			else:
-				
 				max_start_time = 0
 				for p in WL_pulse:
 					if p:
@@ -74,7 +73,7 @@ class netlist_design(parameters):
 				
 				
 				start_time = max_start_time
-				stop_time = start_time + step_time * 2
+				stop_time = start_time + step_time * 3
 
 		
 		else:
@@ -90,58 +89,50 @@ class netlist_design(parameters):
 				WL_pulse[row].append('0')
 				WL_pulse[row].append(str(i+(step_time-1))+time_unit)
 				WL_pulse[row].append('0')
+
+				
+				for k in range(0, self.columns):
+						BL_voltage[k].append(str(i)+time_unit)
+						BL_voltage[k].append("0")
+						BL_voltage[k].append(str(i+(step_time-1))+time_unit)
+						BL_voltage[k].append("0")  
+				
+				for k in range(0, self.rows):
+						SEL_voltage[k].append(str(i)+time_unit)
+						SEL_voltage[k].append("0")
+						SEL_voltage[k].append(str(i+(step_time-1))+time_unit)
+						SEL_voltage[k].append("0")
+
+				
 				insert_p = True		
+
 			else:
 				WL_pulse[row].append(str(i)+time_unit)
 				WL_pulse[row].append(pulse_vol)
 				WL_pulse[row].append(str(i+(step_time-1))+time_unit)
 				WL_pulse[row].append(pulse_vol)
+
+				SEL_voltage[row].append(str(i)+time_unit)
+				SEL_voltage[row].append("Gate_V")
+				SEL_voltage[row].append(str(i+(step_time-1))+time_unit)
+				SEL_voltage[row].append("Gate_V")
+
+							
+				BL_voltage[column].append(str(i)+time_unit)
+				BL_voltage[column].append("0")
+				BL_voltage[column].append(str(i+(step_time-1))+time_unit)
+				BL_voltage[column].append("0")
+
+				for k in range(0, self.columns):
+					if k != column:
+						BL_voltage[k].append(str(i)+time_unit)
+						BL_voltage[k].append(pulse_vol)
+						BL_voltage[k].append(str(i+(step_time-1))+time_unit)
+						BL_voltage[k].append(pulse_vol)  
+
 				insert_p = False
 				concatenated = False
 
-
-		if not BL_voltage[column]:
-			start_time_b = 0
-			stop_time_b = 3 * step_time
-		else:
-			start_time_b = int(BL_voltage[column][-2][:-1])+1 
-			stop_time_b = start_time_b + step_time * 2
-
-		for i in range(start_time_b, stop_time_b, step_time):
-
-			BL_voltage[column].append(str(i)+time_unit)
-			BL_voltage[column].append("0")
-			BL_voltage[column].append(str(i+(step_time-1))+time_unit)
-			BL_voltage[column].append("0")
-
-			for k in range(0, self.columns):
-				if k != column:
-					BL_voltage[k].append(str(i)+time_unit)
-					BL_voltage[k].append(pulse_vol)
-					BL_voltage[k].append(str(i+(step_time-1))+time_unit)
-					BL_voltage[k].append(pulse_vol)  
-
-		
-		if not SEL_voltage[row]:
-			start_time_b = 0
-			stop_time_b = 3 * step_time
-		else:
-			start_time_b = int(SEL_voltage[row][-2][:-1])+1 
-			stop_time_b = start_time_b + step_time * 2
-
-		for i in range(start_time_b, stop_time_b, step_time):
-
-			SEL_voltage[row].append(str(i)+time_unit)
-			SEL_voltage[row].append("Gate_V")
-			SEL_voltage[row].append(str(i+(step_time-1))+time_unit)
-			SEL_voltage[row].append("Gate_V")
-
-			for k in range(0, self.rows):
-				if k != row:
-					SEL_voltage[k].append(str(i)+time_unit)
-					SEL_voltage[k].append("0")
-					SEL_voltage[k].append(str(i+(step_time-1))+time_unit)
-					SEL_voltage[k].append("0")
 
 
 	def pulses_to_string(self,in_pulses_list):
@@ -156,13 +147,13 @@ class netlist_design(parameters):
 			row,column = int(s[1]), int(s[2])
 
 			if s[0].lower() == "read":
-				self.create_pulse(self.step_time, "Read_V", "u", WL_pulses, SEL_voltage, BL_voltage, row, column)
+				self.create_pulse(self.step_time, "Read_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, row, column)
 				
 			elif s[0].lower() == "set":
-				self.create_pulse(self.step_time, "Set_V", "u", WL_pulses, SEL_voltage, BL_voltage, row, column)
+				self.create_pulse(self.step_time, "Set_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, row, column)
 
 			elif s[0].lower() == "reset":
-				self.create_pulse(self.step_time, "Reset_V", "u", WL_pulses, SEL_voltage, BL_voltage, row, column)
+				self.create_pulse(self.step_time, "Reset_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, row, column)
 			
 		if not WL_pulses:
 			print("Empty list!")
@@ -193,6 +184,30 @@ class netlist_design(parameters):
 		
 		return pulses_str
 
+	def pulses_to_file(self, row_list, filename):
+
+		if not row_list:
+			print("Empty list")
+			return
+		
+		with open(filename,'w') as fl:
+			for s in row_list:
+				cmd = s[0]
+				row = s[1]
+
+				if cmd.lower() == "w":
+					for i in range(2, len(s)):
+						if s[i] == '0':
+							fl.write(f"Reset,{row},{i-2}\n")
+						elif s[i] == '1':
+							fl.write(f"Set,{row},{i-2}\n")
+
+				elif cmd.lower() == "r":
+					for i in range(2, len(s)):
+						if s[i] == '1':
+							fl.write(f"Read,{row},{i-2}\n")
+
+
 	def sweep_to_string(self, sweep_params):
 
 		sweep_str = ""
@@ -209,7 +224,7 @@ class netlist_design(parameters):
 		return sweep_str
 
 
-	def gen_netlist(self,static_param= {}, pulses = [], sweep_params = [], file_name = "", memristor_model_path = "", transistor_model_path = ""):
+	def gen_netlist(self,memristor_params= {}, pulses = [], sweep_params = [], file_name = "", memristor_model_path = "", transistor_model_path = ""):
 
 		print("Generating netlist...\n")
 		
@@ -221,23 +236,23 @@ class netlist_design(parameters):
 		str_param += "global 0\n"
 		str_param += "ahdl_include " + "\"" + memristor_model_path + "\"" + "\n"
 		str_param += "include " + "\"" + transistor_model_path + "\"" + "\n" 
-		str_param += "simulatorOptions options vabstol=1e-6 iabstol=1e-12 temp=27 tnom=27 gmin=1e-12\n"
+		str_param += f"simulatorOptions options vabstol = {self.vabstol} iabstol = {self.iabstol} temp = {self.temp} tnom = {self.tnom} gmin = {self.gmin}\n"
 		str_param += f"trans {self.simulation_type} stop = {self.simulation_stop_time} maxstep = {self.simulation_maxstep} errpreset=conservative\n"
 		str_param += f"saveOptions options save=all currents=all saveahdlvars=all\n"
-		#str_param += f"save {ckt_name}.I0:OE {ckt_name}.I0:AE\n"
-		str_param += f"parameters Read_V = {self.read_v} Set_V = {self.set_v} Reset_V = {self.reset_v} Gate_V = {self.gate_v}\n\n"
-		str_param += "parameters " + self.parameters_list(param=static_param) + "\n\n\n"
+		str_param += f"parameters Read_V = {self.read_v} Set_V = {self.set_v} Reset_V = {self.reset_v} Gate_V = {self.gate_v} Transistor_Width = {self.trans_width}n Transistor_Length = {self.trans_length}n\n"
+		if memristor_params: str_param += "parameters " + self.parameters_list(param=memristor_params) + "\n"
+		str_param += "\n"
 
-		str_ckt += "subckt TM_subckt MemInput Output TransGate Bulk\n"
-		str_ckt += f"\tM0 (net MemInput) {self.memristor_model}"
-		str_ckt += "\t" + self.parameters_list(param=static_param, numerical_mode = False) + "\n"
-		str_ckt += f"\tT0 (net TransGate Output Bulk) {self.transistor_model}\n"
-		str_ckt += "ends TM_subckt\n\n\n"
+		str_ckt += "subckt XBAR_CELL WordLine BitLine Select_Line\n"
+		str_ckt += f"\tM0 (net WordLine) {self.memristor_model}"
+		str_ckt += "\t" + self.parameters_list(param=memristor_params, numerical_mode = False) + "\n"
+		str_ckt += f"\tT0 (net Select_Line BitLine BitLine) {self.transistor_model}  w = Transistor_Width	 l = Transistor_Length\n"
+		str_ckt += "ends XBAR_CELL\n\n"
 
 		k = 0
 		for i in range(0, self.rows):
 			for j in range(0, self.columns):
-				str_instances += f"I{k} (r{i} c{j} g{i} c{j}) TM_subckt\n"
+				str_instances += f"I{k} (r{i} c{j} g{i}) XBAR_CELL\n"
 				k += 1
 
 		str_pulses += "\n\n" + self.pulses_to_string(pulses)

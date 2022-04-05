@@ -1,4 +1,3 @@
-
 venvdir := venv
 
 #all: clean create_venv jupyter_spellcheck
@@ -13,6 +12,7 @@ ${venvdir}: requirements.txt
 	${venvdir}/bin/pip install setuptools wheel
 	${venvdir}/bin/pip install  -Ur requirements.txt
 	echo "source ${venvdir}/bin/activate" > source_me.sh
+	echo "module load cadence-flow/mixed-signal/2020-21" >> source_me.sh
 	echo "export PYTHONPATH=`readlink -f src/`" >> source_me.sh
 
 # jupyter_spellcheck: venv

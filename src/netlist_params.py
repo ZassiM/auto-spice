@@ -106,14 +106,15 @@ class parameters(object):
 		print("Voltage pulses correctly added.\n")
 
 
-	def set_simulation_params(self, type_ = "tran", step_time = "100", max_step = "1", time_units = "u", in_pulses_list = []):
+	def set_simulation_params(self, type_ = "tran", step_time = 100, period = 100, max_step = 1, time_units = "u", vabstol = "1e-6", iabstol = "1e-12", temp = "27", tnom = "27", gmin = "1e-12", in_pulses_list = []):
 
 		self.simulation_type = type_
 		self.time_units = time_units
 		self.simulation_maxstep = str(max_step) + self.time_units
-		self.step_time = int(step_time)
+		self.step_time = step_time
+		self.period = period
 		self.simulation_stop_time = str(self.calculate_stop_time(in_pulses_list)) + self.time_units
-
+		self.vabstol, self.iabstol, self.temp, self.tnom, self.gmin = vabstol, iabstol, temp, tnom, gmin
 
 		print(f"Stop time: {self.simulation_stop_time}s, Step time: {self.step_time}{self.time_units}s, Max step: {self.simulation_maxstep}s.\n")
 
@@ -147,15 +148,17 @@ class parameters(object):
 
 			cnt = 0
 
-		return max_stop_time
+		return max_stop_time * self.rows
 
 
-	def set_xbar_params(self, read_v = 0.2, set_v = -1.05, reset_v = 0.75, gate_v = 1):
+	def set_crossbar_params(self, read_v = 0.2, set_v = -1.05, reset_v = 0.75, gate_v = 1, trans_length = 32, trans_width = 32):
 
 		self.read_v = read_v
 		self.set_v = set_v
 		self.reset_v = reset_v
 		self.gate_v = gate_v
+		self.trans_length = trans_length
+		self.trans_width = trans_width
 		
 
 	def set_variablity(self, Nmin=False, Nmax=False, rdet=False, ldet=False):

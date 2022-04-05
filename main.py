@@ -1,70 +1,91 @@
-from src.ckt_gen import netlist_design
+from src.netlist_gen import netlist_design
 import json
 import csv
 import os
 import time
+import sys
 
+config_filepath = "config.json"
+pulses_input_filepath = "cell_input.csv"
+row_input_filepath = "row_input.csv"
 out_file_name = "netlist.scs" 
-memristor_model_path = os.getcwd() + '/deps/JART-memristor-models/' 
+memristor_model_path = os.getcwd() + '/deps/memristor-models/' 
 transistor_model_path = os.getcwd() + '/deps/transistor-models/'
-ckt = netlist_design()  
+circuit = netlist_design()  
 
 mean_sigma = { "Ndiscmin": (8e-03, 2e-3), "Ndiscmax": (20, 1), "lnew": (0.4, 0.04), "rnew": (45e-09, 5e-09)}	
 
-static_param_sim = " eps = 17 epsphib = 5.5 Ndiscmin=0.008"	
+memristor_params = {}
 
- 
-static_param = {"T0":0.293,"eps": 17,"epsphib":5.5,"phiBn0":0.18, "phin":0.1,"un":4e-06,
-		 "Ndiscmax":20,"Ndiscmin": 0.008,"Ninit": 0.008, "Nplug": 20,
-		 "a": 2.5e-10,"ny0": 2e+13, "dWa": 1.35, "Rth0": 1.5e7,
-		 "rdet": 45e-09, 'lcell': 3, 'ldet': 0.4,
-		 "Rtheff_scaling": 0.27, "RseriesTiOx": 650, "R0": 719.244,
-	     'Rthline': 90471.5, 'alphaline': 0.00392}
 
-with open('config.json', 'r') as file:
+print("\n***********************************************")
+
+if len(sys.argv) > 1 and str(sys.argv[1]) == 'sample':
+	config_filepath = "sample/" + config_filepath
+	pulses_input_filepath = "sample/" + pulses_input_filepath
+	row_input_filepath = "sample/" + row_input_filepath
+	print("Sample used.\n")
+
+
+with open(config_filepath, 'r') as file:
 	config = json.load(file)
 
-	nmin_b, nmax_b, ldet_b, rdet_b = config['var_bools']['ndiscmin'], config['var_bools']['ndiscmax'], config['var_bools']['ldet'], config['var_bools']['rdet']	
+	input_type = config['input_type']['row_by_row']
 
-	sim_type, step_time, max_step, time_units = config['sim_params']['type'], config['sim_params']['step_time'], config['sim_params']['max_step'], config['sim_params']['time_units']
+	sim_params = config["sim_params"]
+	sim_type, step_time, period, max_step, time_units = sim_params['type'], sim_params['step_time'], sim_params['period'], sim_params['max_step'],sim_params['time_units']
+	vabstol, iabstol, temp, tnom, gmin = sim_params['vabstol'], sim_params['iabstol'], sim_params['temp'], sim_params['tnom'], sim_params['gmin']
 
-	memristor_model_path += config['sim_params']['memristor_model_file']
+	crossbar_params = config["crossbar_params"]
 
-	transistor_model_path += config['sim_params']['transistor_model_file']
+	memristor_model_path += crossbar_params['memristor_model_file']
+	transistor_model_path += crossbar_params['transistor_model_file']
+	read_v, set_v, reset_v, gate_v = crossbar_params['read_v'], crossbar_params['set_v'], crossbar_params['reset_v'], crossbar_params['gate_v']
+	nmin_b, nmax_b, ldet_b, rdet_b = crossbar_params['ndiscmin'], crossbar_params['ndiscmax'], crossbar_params['ldet'], crossbar_params['rdet']	
+	transistor_lenght, transistor_width = crossbar_params["transistor_length"], crossbar_params["transistor_width"]
 
-	read_v, set_v, reset_v, gate_v = config['sim_params']['read_v'], config['sim_params']['set_v'], config['sim_params']['reset_v'], config['sim_params']['gate_v']
+	crossbar_params = list(crossbar_params.items())
 
-	Rth0 = config['sim_params']['Rth0']
+	if(len(crossbar_params) > 12):
+		for i in range(12, len(crossbar_params)):
+			memristor_params[crossbar_params[i][0]] = crossbar_params[i][1]
 
-	if config['gate_sweep']['min_v'] == 0 and config['gate_sweep']['max_v'] == 0:
-		print("No sweeping of the gate voltage.\n")
+
+	gate_sweep = config['gate_sweep']
+	if gate_sweep['min_v'] == 0 and gate_sweep['max_v'] == 0:
 		sweep_params = []
-
 	else:
-		min_gate = config['gate_sweep']['min_v']
-		max_gate = config['gate_sweep']['max_v']
-		step_gate = config['gate_sweep']['step_v']
-
+		min_gate = gate_sweep['min_v']
+		max_gate = gate_sweep['max_v']
+		step_gate = gate_sweep['step_v']
 		sweep_params = [min_gate, max_gate, step_gate]		
 
 
+if input_type == 1:
+	with open(row_input_filepath, 'r') as file:
+		reader = csv.reader(file)
+		row_pulses_list = list(filter(None,reader))
+		circuit.pulses_to_file(row_pulses_list, pulses_input_filepath)
 
-with open('pulses.csv', 'r') as file:
-    reader = csv.reader(file)
-    in_pulses_list = list(filter(None,reader))
-    
+with open(pulses_input_filepath, 'r') as file:
+		reader = csv.reader(file)
+		in_pulses_list = list(filter(None,reader))
 
-ckt.calculate_xbar_size(in_pulses_list)
-ckt.set_xbar_params(read_v, set_v, reset_v, gate_v)
-ckt.set_simulation_params(sim_type, step_time, max_step, time_units, in_pulses_list)
+if not in_pulses_list:
+	print("No pulses input! Terminating program...")
+	quit()
 
-var_bools = ckt.set_variablity(Nmin = nmin_b, Nmax = nmax_b, ldet = ldet_b, rdet = rdet_b)	
-var_param = ckt.update_param(static_param_sim, mean_sigma, var_bools)	
 
-static_param["Rth0"] = Rth0
-ckt.gen_netlist(static_param, in_pulses_list, sweep_params, out_file_name, memristor_model_path, transistor_model_path)	
+circuit.calculate_xbar_size(in_pulses_list)
+circuit.set_crossbar_params(read_v, set_v, reset_v, gate_v, transistor_lenght, transistor_width)
+circuit.set_simulation_params(sim_type, step_time, period, max_step, time_units, vabstol, iabstol, temp, tnom, gmin, in_pulses_list)
 
-# print("Running simulation...")
+var_bools = circuit.set_variablity(Nmin = nmin_b, Nmax = nmax_b, ldet = ldet_b, rdet = rdet_b)	
+var_param = circuit.update_param(mean_sigma, var_bools)	
+
+circuit.gen_netlist(memristor_params, in_pulses_list, sweep_params, out_file_name, memristor_model_path, transistor_model_path)	
+
+print("Running simulation...")
+print("***********************************************\n")
 # time.sleep(1.5)
-# os.system('module load cadence-flow/mixed-signal/2020-21')
-# os.system(f'spectre {out_file_name}')
+# os.system(f"spectre {out_file_name}")
