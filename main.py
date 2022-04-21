@@ -17,7 +17,6 @@ mean_sigma = { "Ndiscmin": (8e-03, 2e-3), "Ndiscmax": (20, 1), "lnew": (0.4, 0.0
 
 memristor_params = {}
 
-
 print("\n***********************************************")
 
 if len(sys.argv) > 1 and str(sys.argv[1]) == 'sample':
@@ -49,6 +48,7 @@ with open(config_filepath, 'r') as file:
 	if(len(crossbar_params) > 12):
 		for i in range(12, len(crossbar_params)):
 			memristor_params[crossbar_params[i][0]] = crossbar_params[i][1]
+			#Rth0 = 1.572e7
 
 
 	gate_sweep = config['gate_sweep']
@@ -85,7 +85,8 @@ var_param = circuit.update_param(mean_sigma, var_bools)
 
 circuit.gen_netlist(memristor_params, in_pulses_list, sweep_params, out_file_name, memristor_model_path, transistor_model_path)	
 
-print("Running simulation...")
-print("***********************************************\n")
+# input("Press Enter to run the simulation.\n")
+# print("Running simulation...")
+# print("***********************************************\n")
 # time.sleep(1.5)
 # os.system(f"spectre {out_file_name}")

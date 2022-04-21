@@ -112,6 +112,7 @@ class parameters(object):
 		self.time_units = time_units
 		self.simulation_maxstep = str(max_step) + self.time_units
 		self.step_time = step_time
+		if period < 2 : period = 2
 		self.period = period
 		self.simulation_stop_time = str(self.calculate_stop_time(in_pulses_list)) + self.time_units
 		self.vabstol, self.iabstol, self.temp, self.tnom, self.gmin = vabstol, iabstol, temp, tnom, gmin
@@ -143,7 +144,7 @@ class parameters(object):
 			for s in in_pulses_list:
 				if int(s[1]) == i:
 					cnt += 1
-			stop_time = (self.step_time)*2*cnt + self.step_time
+			stop_time = (self.step_time + self.period)*cnt + self.step_time
 			if stop_time > max_stop_time : max_stop_time = stop_time
 
 			cnt = 0

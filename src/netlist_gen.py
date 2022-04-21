@@ -51,18 +51,42 @@ class netlist_design(parameters):
 		return var_param
 
 
-	def create_pulse(self, step_time, pulse_vol, time_unit, WL_pulse, SEL_voltage, BL_voltage, row, column):
+	def create_pulse(self, pulse_vol, time_unit, WL_pulse, SEL_voltage, BL_voltage, row, column, gate_level):
+		'''
+		
+		'''
 
 		insert_p = False
 		concatenated = False
 
-		start_time_b = 0
-		stop_time_b = 3*step_time
+		if not any(BL_voltage):
+			for k in range (0, self.columns):
+				BL_voltage[k].append(str(0) + time_unit)
+				BL_voltage[k].append('0')
+				BL_voltage[k].append(str(0+(self.period-1))+time_unit)
+				BL_voltage[k].append('0')
+
+		if not any(SEL_voltage):
+			for k in range (0,self.rows):
+				SEL_voltage[k].append(str(0) + time_unit)
+				SEL_voltage[k].append('0')
+				SEL_voltage[k].append(str(0+(self.period-1))+time_unit)
+				SEL_voltage[k].append('0')
+
 
 		if not WL_pulse[row]:
 			if not any(WL_pulse):
-				start_time = 0
-				stop_time = 3 * step_time
+				WL_pulse[row].append(str(0) + time_unit)
+				WL_pulse[row].append('0')
+				WL_pulse[row].append(str(0+(self.period-1))+time_unit)
+				WL_pulse[row].append('0')
+
+
+				start_time = self.period
+				if self.period > self.step_time: stop_time = 2*self.period - self.step_time
+				else:  stop_time = 2*self.step_time
+				insert_p = True
+				
 				
 			else:
 				max_start_time = 0
@@ -73,34 +97,36 @@ class netlist_design(parameters):
 				
 				
 				start_time = max_start_time
-				stop_time = start_time + step_time * 3
+				stop_time = start_time + self.step_time * 3
 
 		
 		else:
 			start_time = int(WL_pulse[row][-2][:-1])+1 
-			stop_time = start_time + step_time * 2
+			stop_time = start_time + self.step_time * 2
 			concatenated = True
 
+
+
 		
-		for i in range(start_time, stop_time, step_time):
+		for i in range(start_time, stop_time, self.step_time):
 
 			if insert_p == False and concatenated == False:
 				WL_pulse[row].append(str(i)+time_unit)
 				WL_pulse[row].append('0')
-				WL_pulse[row].append(str(i+(step_time-1))+time_unit)
+				WL_pulse[row].append(str(i+(self.period-1))+time_unit)
 				WL_pulse[row].append('0')
 
 				
 				for k in range(0, self.columns):
 						BL_voltage[k].append(str(i)+time_unit)
 						BL_voltage[k].append("0")
-						BL_voltage[k].append(str(i+(step_time-1))+time_unit)
+						BL_voltage[k].append(str(i+(self.period-1))+time_unit)
 						BL_voltage[k].append("0")  
 				
 				for k in range(0, self.rows):
 						SEL_voltage[k].append(str(i)+time_unit)
 						SEL_voltage[k].append("0")
-						SEL_voltage[k].append(str(i+(step_time-1))+time_unit)
+						SEL_voltage[k].append(str(i+(self.period-1))+time_unit)
 						SEL_voltage[k].append("0")
 
 				
@@ -109,25 +135,33 @@ class netlist_design(parameters):
 			else:
 				WL_pulse[row].append(str(i)+time_unit)
 				WL_pulse[row].append(pulse_vol)
-				WL_pulse[row].append(str(i+(step_time-1))+time_unit)
+				WL_pulse[row].append(str(i+(self.step_time-1))+time_unit)
 				WL_pulse[row].append(pulse_vol)
 
-				SEL_voltage[row].append(str(i)+time_unit)
-				SEL_voltage[row].append("Gate_V")
-				SEL_voltage[row].append(str(i+(step_time-1))+time_unit)
-				SEL_voltage[row].append("Gate_V")
-
-							
 				BL_voltage[column].append(str(i)+time_unit)
 				BL_voltage[column].append("0")
-				BL_voltage[column].append(str(i+(step_time-1))+time_unit)
+				BL_voltage[column].append(str(i+(self.step_time-1))+time_unit)
 				BL_voltage[column].append("0")
+				
+				if gate_level == None:
+					SEL_voltage[row].append(str(i)+time_unit)
+					SEL_voltage[row].append("Gate_V")
+					SEL_voltage[row].append(str(i+(self.step_time-1))+time_unit)
+					SEL_voltage[row].append("Gate_V")
+
+				else:
+					SEL_voltage[row].append(str(i)+time_unit)
+					SEL_voltage[row].append(gate_level)
+					SEL_voltage[row].append(str(i+(self.step_time-1))+time_unit)
+					SEL_voltage[row].append(gate_level)
+
+							
 
 				for k in range(0, self.columns):
 					if k != column:
 						BL_voltage[k].append(str(i)+time_unit)
 						BL_voltage[k].append(pulse_vol)
-						BL_voltage[k].append(str(i+(step_time-1))+time_unit)
+						BL_voltage[k].append(str(i+(self.step_time-1))+time_unit)
 						BL_voltage[k].append(pulse_vol)  
 
 				insert_p = False
@@ -145,15 +179,18 @@ class netlist_design(parameters):
 		for s in in_pulses_list:
 
 			row,column = int(s[1]), int(s[2])
+			gate_level = None
+			if len(s) > 3:
+				gate_level = s[3]
 
 			if s[0].lower() == "read":
-				self.create_pulse(self.step_time, "Read_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, row, column)
+				self.create_pulse("Read_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, row, column, gate_level)
 				
 			elif s[0].lower() == "set":
-				self.create_pulse(self.step_time, "Set_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, row, column)
+				self.create_pulse("Set_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, row, column, gate_level)
 
 			elif s[0].lower() == "reset":
-				self.create_pulse(self.step_time, "Reset_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, row, column)
+				self.create_pulse("Reset_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, row, column, gate_level)
 			
 		if not WL_pulses:
 			print("Empty list!")
@@ -199,8 +236,8 @@ class netlist_design(parameters):
 					for i in range(2, len(s)):
 						if s[i] == '0':
 							fl.write(f"Reset,{row},{i-2}\n")
-						elif s[i] == '1':
-							fl.write(f"Set,{row},{i-2}\n")
+						else:
+							fl.write(f"Set,{row},{i-2},{s[i]}\n")
 
 				elif cmd.lower() == "r":
 					for i in range(2, len(s)):
@@ -216,7 +253,7 @@ class netlist_design(parameters):
 		if max_g < min_g : step_g = -step_g
 		
 		sweep_str += "swp sweep param = Gate_V values=["
-		for i in np.arange(min_g, max_g, step_g):
+		for i in np.arange(min_g, max_g + step_g, step_g):
 			sweep_str += str(np.round(i,2)) + " "
 
 		sweep_str = sweep_str[0:-1] + f"]{{\n\ttran tran stop = {self.simulation_stop_time} errpreset=conservative maxstep={self.simulation_maxstep}\n}}"
@@ -243,10 +280,10 @@ class netlist_design(parameters):
 		if memristor_params: str_param += "parameters " + self.parameters_list(param=memristor_params) + "\n"
 		str_param += "\n"
 
-		str_ckt += "subckt XBAR_CELL WordLine BitLine Select_Line\n"
+		str_ckt += "subckt XBAR_CELL WordLine BitLine SelectLine\n"
 		str_ckt += f"\tM0 (net WordLine) {self.memristor_model}"
 		str_ckt += "\t" + self.parameters_list(param=memristor_params, numerical_mode = False) + "\n"
-		str_ckt += f"\tT0 (net Select_Line BitLine BitLine) {self.transistor_model}  w = Transistor_Width	 l = Transistor_Length\n"
+		str_ckt += f"\tT0 (net SelectLine BitLine BitLine) {self.transistor_model}  w = Transistor_Width	 l = Transistor_Length\n"
 		str_ckt += "ends XBAR_CELL\n\n"
 
 		k = 0
