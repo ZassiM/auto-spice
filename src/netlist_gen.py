@@ -74,34 +74,23 @@ class netlist_design(parameters):
 				SEL_voltage[k].append('0')
 
 
-		if not WL_pulse[row]:
-			if not any(WL_pulse):
-				WL_pulse[row].append(str(0) + time_unit)
-				WL_pulse[row].append('0')
-				WL_pulse[row].append(str(0+(self.period-1))+time_unit)
-				WL_pulse[row].append('0')
+		if not WL_pulse:
+			WL_pulse.append(str(0) + time_unit)
+			WL_pulse.append('0')
+			WL_pulse.append(str(0+(self.period-1))+time_unit)
+			WL_pulse.append('0')
 
 
-				start_time = self.period
-				if self.period > self.step_time: stop_time = 2*self.period - self.step_time
-				else:  stop_time = 2*self.step_time
-				insert_p = True
+			start_time = self.period
+			if self.period > self.step_time: stop_time = 2*self.period - self.step_time
+			else:  stop_time = 2*self.step_time
+			insert_p = True
 				
-				
-			else:
-				max_start_time = 0
-				for p in WL_pulse:
-					if p:
-						s_time = int(p[-2][:-1])+1
-						if s_time > max_start_time : max_start_time = s_time
-				
-				
-				start_time = max_start_time
-				stop_time = start_time + self.step_time * 3
+		
 
 		
 		else:
-			start_time = int(WL_pulse[row][-2][:-1])+1 
+			start_time = int(SEL_voltage[row][-2][:-1])+1 
 			stop_time = start_time + self.step_time * 2
 			concatenated = True
 
@@ -111,10 +100,10 @@ class netlist_design(parameters):
 		for i in range(start_time, stop_time, self.step_time):
 
 			if insert_p == False and concatenated == False:
-				WL_pulse[row].append(str(i)+time_unit)
-				WL_pulse[row].append('0')
-				WL_pulse[row].append(str(i+(self.period-1))+time_unit)
-				WL_pulse[row].append('0')
+				WL_pulse.append(str(i)+time_unit)
+				WL_pulse.append('0')
+				WL_pulse.append(str(i+(self.period-1))+time_unit)
+				WL_pulse.append('0')
 
 				
 				for k in range(0, self.columns):
@@ -133,17 +122,17 @@ class netlist_design(parameters):
 				insert_p = True		
 
 			else:
-				WL_pulse[row].append(str(i)+time_unit)
-				WL_pulse[row].append(pulse_vol)
-				WL_pulse[row].append(str(i+(self.step_time-1))+time_unit)
-				WL_pulse[row].append(pulse_vol)
+				WL_pulse.append(str(i)+time_unit)
+				WL_pulse.append(pulse_vol)
+				WL_pulse.append(str(i+(self.step_time-1))+time_unit)
+				WL_pulse.append(pulse_vol)
 
 				BL_voltage[column].append(str(i)+time_unit)
 				BL_voltage[column].append("0")
 				BL_voltage[column].append(str(i+(self.step_time-1))+time_unit)
 				BL_voltage[column].append("0")
 				
-				if gate_level == None:
+				if gate_level == None or gate_level == '1':
 					SEL_voltage[row].append(str(i)+time_unit)
 					SEL_voltage[row].append("Gate_V")
 					SEL_voltage[row].append(str(i+(self.step_time-1))+time_unit)
@@ -171,7 +160,7 @@ class netlist_design(parameters):
 
 	def pulses_to_string(self,in_pulses_list):
 
-		WL_pulses = [[] for _ in range(self.rows)]
+		WL_pulses = []
 		SEL_voltage = [[] for _ in range(self.rows)]
 		BL_voltage = [[] for _ in range(self.columns)]
 
@@ -201,8 +190,8 @@ class netlist_design(parameters):
 		c = 0
 		for i in range(0, self.rows):
 			pulses_str += f"V_WL{i}(r{i} 0) vsource type=pwl wave=[\\\n"
-			for k in range(0, len(WL_pulses[i])-1, 2):
-				pulses_str += WL_pulses[i][k] + '\t' + WL_pulses[i][k+1] + '\t\\\n'
+			for k in range(0, len(WL_pulses)-1, 2):
+				pulses_str += WL_pulses[k] + '\t' + WL_pulses[k+1] + '\t\\\n'
 			pulses_str += ']\n'
 
 			pulses_str += f"V_SEL{i}(g{i} 0) vsource type=pwl wave=[\\\n"
