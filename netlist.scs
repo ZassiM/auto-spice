@@ -37,10 +37,6 @@ V_WL0(r0 0) vsource type=pwl wave=[\
 399n	0	\
 450n	0	\
 499n	0	\
-500n	0	\
-549n	0	\
-600n	0	\
-649n	0	\
 ]
 V_SEL0(g0 0) vsource type=pwl wave=[\
 0n	0	\
@@ -55,8 +51,6 @@ V_SEL0(g0 0) vsource type=pwl wave=[\
 349n	0	\
 450n	0	\
 499n	0	\
-600n	0	\
-649n	0	\
 ]
 
 V_WL1(r1 0) vsource type=pwl wave=[\
@@ -70,14 +64,10 @@ V_WL1(r1 0) vsource type=pwl wave=[\
 249n	0	\
 300n	0	\
 349n	0	\
-350n	Set_V	\
-449n	Set_V	\
+350n	Read_V	\
+449n	Read_V	\
 450n	0	\
 499n	0	\
-500n	Reset_V	\
-599n	Reset_V	\
-600n	0	\
-649n	0	\
 ]
 V_SEL1(g1 0) vsource type=pwl wave=[\
 0n	0	\
@@ -90,10 +80,6 @@ V_SEL1(g1 0) vsource type=pwl wave=[\
 449n	Gate_V	\
 450n	0	\
 499n	0	\
-500n	Gate_V	\
-599n	Gate_V	\
-600n	0	\
-649n	0	\
 ]
 
 
@@ -109,14 +95,10 @@ V_BL0(c0 0) vsource type=pwl wave=[\
 299n	Reset_V	\
 300n	0	\
 349n	0	\
-350n	Set_V	\
-449n	Set_V	\
+350n	0	\
+449n	0	\
 450n	0	\
 499n	0	\
-500n	0	\
-599n	0	\
-600n	0	\
-649n	0	\
 ]
 
 V_BL1(c1 0) vsource type=pwl wave=[\
@@ -134,10 +116,6 @@ V_BL1(c1 0) vsource type=pwl wave=[\
 449n	0	\
 450n	0	\
 499n	0	\
-500n	Reset_V	\
-599n	Reset_V	\
-600n	0	\
-649n	0	\
 ]
 
 V_BL2(c2 0) vsource type=pwl wave=[\
@@ -151,14 +129,10 @@ V_BL2(c2 0) vsource type=pwl wave=[\
 299n	Reset_V	\
 300n	0	\
 349n	0	\
-350n	Set_V	\
-449n	Set_V	\
+350n	0	\
+449n	0	\
 450n	0	\
 499n	0	\
-500n	0	\
-599n	0	\
-600n	0	\
-649n	0	\
 ]
 
 V_BL3(c3 0) vsource type=pwl wave=[\
@@ -176,9 +150,5 @@ V_BL3(c3 0) vsource type=pwl wave=[\
 449n	0	\
 450n	0	\
 499n	0	\
-500n	Reset_V	\
-599n	Reset_V	\
-600n	0	\
-649n	0	\
 ]
 
