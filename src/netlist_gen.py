@@ -203,6 +203,13 @@ class netlist_design(parameters):
 
 		for i in range(start_time, stop_time, self.step_time):
 
+			for k in range(0,self.rows):
+				if k != row:
+					WL_pulse[k].append(str(i) + time_unit)
+					WL_pulse[k].append('0')
+					WL_pulse[k].append(str(i+(self.period-1))+time_unit)
+					WL_pulse[k].append('0')
+
 			if insert_p == False and concatenated == False:
 				WL_pulse[row].append(str(i)+time_unit)
 				WL_pulse[row].append('0')
