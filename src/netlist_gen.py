@@ -164,9 +164,6 @@ class netlist_design(parameters):
 		insert_p = False
 		concatenated = False
 
-		pulse_vol_set = "Set_V"
-		pulse_vol_reset = "Reset_V"
-
 		if not any(BL_voltage):
 			for k in range (0, self.columns):
 				BL_voltage[k].append(str(0) + time_unit)
@@ -290,6 +287,7 @@ class netlist_design(parameters):
 		elif self.input_type == 2:  #binary parallel op
 			SET_CELLS = [[] for _ in range(self.rows)]
 			RESET_CELLS = [[] for _ in range(self.rows)]
+			READ_CELLS = [[] for _ in range(self.rows)]
 
 			for s in in_pulses_list:
 				row,column = int(s[1]), int(s[2])
@@ -302,14 +300,14 @@ class netlist_design(parameters):
 					SET_CELLS[row].append(column)
 				elif s[0].lower() == "reset":
 					RESET_CELLS[row].append(column)
-
 				elif s[0].lower() == "read":
-					self.create_pulse("Read_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, row, column, gate_level)
+					READ_CELLS[row].append(column)
 
 			row = 0
-			for cells_s, cells_r in zip(SET_CELLS, RESET_CELLS):
-				if cells_s: self.create_pulse2("Set_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, cells_s, row)
-				if cells_r: self.create_pulse2("Reset_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, cells_r, row)
+			for sets, reset, reads in zip(SET_CELLS, RESET_CELLS, READ_CELLS):
+				if sets: self.create_pulse2("Set_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, sets, row)
+				if reset: self.create_pulse2("Reset_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, reset, row)
+				if reads: self.create_pulse2("Read_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, reads, row)
 
 				row += 1
 
