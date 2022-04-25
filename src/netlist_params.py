@@ -125,7 +125,6 @@ class parameters(object):
         columns = 0
 
         for s in in_pulses_list:
-            
             row,column = int(s[1]), int(s[2])
             
             if(row > rows): rows = row
@@ -140,19 +139,19 @@ class parameters(object):
     def calculate_stop_time(self, in_pulses_list):
         max_stop_time = 0
         cnt = 0
-        for i in range(0, self.rows):
-            for s in in_pulses_list:
+        for s in in_pulses_list:
+            for i in range(0, self.rows):
                 if int(s[1]) == i:
                     cnt += 1
-            stop_time = (self.step_time + self.period)*cnt + self.step_time
-            if stop_time > max_stop_time : max_stop_time = stop_time
+                stop_time = (self.step_time + self.period)*cnt + self.step_time
+                if stop_time > max_stop_time : max_stop_time = stop_time
 
-            cnt = 0
+                cnt = 0
 
         return max_stop_time * self.rows
 
 
-    def set_crossbar_params(self, read_v = 0.2, set_v = -1.05, reset_v = 0.75, gate_v = 1, trans_length = 32, trans_width = 32):
+    def set_crossbar_params(self, read_v = 0.2, set_v = -1.05, reset_v = 0.75, gate_v = 1, trans_length = 32, trans_width = 32, input_type = 0):
 
         self.read_v = read_v
         self.set_v = set_v
@@ -160,6 +159,7 @@ class parameters(object):
         self.gate_v = gate_v
         self.trans_length = trans_length
         self.trans_width = trans_width
+        self.input_type = input_type
         
 
     def set_variablity(self, Nmin=False, Nmax=False, rdet=False, ldet=False):
