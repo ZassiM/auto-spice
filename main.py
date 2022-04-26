@@ -89,9 +89,11 @@ var_param = circuit.update_param(mean_sigma, var_bools)
 
 circuit.gen_netlist(memristor_params, in_pulses_list, sweep_params, OUT_FILE_NAME, memristor_model_path, transistor_model_path)	
 
+'''
+input("Press Enter to run the simulation.\n")
+print("Running simulation...")
+print("***********************************************\n")
+time.sleep(1.5)
+os.system(f"spectre {OUT_FILE_NAME}")
+'''
 
-# input("Press Enter to run the simulation.\n")
-# print("Running simulation...")
-# print("***********************************************\n")
-# time.sleep(1.5)
-# os.system(f"spectre {OUT_FILE_NAME}")

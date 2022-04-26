@@ -1,5 +1,9 @@
-a = [1,2,3]
-b = [5,6,7]
+SET_CELLS = [[] for _ in range(3)]
+print(SET_CELLS)
+for i in range(0, len(SET_CELLS)):
+    SET_CELLS[i].clear()
+print(SET_CELLS)
 
-for x,y in zip(a,b):
-    print(f"{x}, {y}")
+SET_CELLS[2].append(12)
+
+print(SET_CELLS)
