@@ -4,7 +4,7 @@
 import json
 import csv
 import os
-#import time
+import time
 import sys
 from src.netlist_gen import netlist_design
 
