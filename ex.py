@@ -1,9 +1,15 @@
-SET_CELLS = [[] for _ in range(3)]
-print(SET_CELLS)
-for i in range(0, len(SET_CELLS)):
-    SET_CELLS[i].clear()
-print(SET_CELLS)
+rows=2
+cols=4
+B = [[[] for i in range(0,cols)] for j in range(0,rows)]
 
-SET_CELLS[2].append(12)
+#print(B)
+for i in B:
+    print(i)
 
-print(SET_CELLS)
+for i in range(0, rows):
+    for j in range(0, cols):
+        B[i][j].append(f"{i}{j}")
+
+for i in B:
+    print(i)
+
