@@ -12,67 +12,25 @@ subckt XBAR_CELL WordLine BitLine SelectLine
 	T0 (net SelectLine BitLine BitLine) nmos  w = Transistor_Width	 l = Transistor_Length
 ends XBAR_CELL
 
-I0 (r0 c00 g0) XBAR_CELL
-I1 (r0 c01 g0) XBAR_CELL
-I2 (r0 c02 g0) XBAR_CELL
-I3 (r0 c03 g0) XBAR_CELL
-I4 (r1 c10 g1) XBAR_CELL
-I5 (r1 c11 g1) XBAR_CELL
-I6 (r1 c12 g1) XBAR_CELL
-I7 (r1 c13 g1) XBAR_CELL
+I0 (r0 c0 g0) XBAR_CELL
+I1 (r1 c1 g1) XBAR_CELL
 
 
 V_WL0(r0 0) vsource type=pwl wave=[\
 0n	0	\
 49n	0	\
-50n	Set_V	\
-149n	Set_V	\
+50n	Read_V	\
+149n	Read_V	\
 150n	0	\
 199n	0	\
-200n	Reset_V	\
-299n	Reset_V	\
+200n	Set_V	\
+299n	Set_V	\
 300n	0	\
 349n	0	\
-350n	0	\
-399n	0	\
+350n	Read_V	\
+449n	Read_V	\
 450n	0	\
 499n	0	\
-500n	0	\
-549n	0	\
-600n	0	\
-649n	0	\
-650n	Read_V	\
-749n	Read_V	\
-750n	0	\
-799n	0	\
-800n	Read_V	\
-899n	Read_V	\
-900n	0	\
-949n	0	\
-950n	Read_V	\
-1049n	Read_V	\
-1050n	0	\
-1099n	0	\
-1100n	Read_V	\
-1199n	Read_V	\
-1200n	0	\
-1249n	0	\
-1250n	0	\
-1299n	0	\
-1350n	0	\
-1399n	0	\
-1400n	0	\
-1449n	0	\
-1500n	0	\
-1549n	0	\
-1550n	0	\
-1599n	0	\
-1650n	0	\
-1699n	0	\
-1700n	0	\
-1749n	0	\
-1800n	0	\
-1849n	0	\
 ]
 V_SEL0(g0 0) vsource type=pwl wave=[\
 0n	0	\
@@ -85,360 +43,45 @@ V_SEL0(g0 0) vsource type=pwl wave=[\
 299n	Gate_V	\
 300n	0	\
 349n	0	\
-450n	0	\
-499n	0	\
-600n	0	\
-649n	0	\
-650n	Gate_V	\
-749n	Gate_V	\
-750n	0	\
-799n	0	\
-800n	Gate_V	\
-899n	Gate_V	\
-900n	0	\
-949n	0	\
-950n	Gate_V	\
-1049n	Gate_V	\
-1050n	0	\
-1099n	0	\
-1100n	Gate_V	\
-1199n	Gate_V	\
-1200n	0	\
-1249n	0	\
-1350n	0	\
-1399n	0	\
-1500n	0	\
-1549n	0	\
-1650n	0	\
-1699n	0	\
-1800n	0	\
-1849n	0	\
-]
-
-V_WL1(r1 0) vsource type=pwl wave=[\
-0n	0	\
-49n	0	\
-50n	0	\
-99n	0	\
-150n	0	\
-199n	0	\
-200n	0	\
-249n	0	\
-300n	0	\
-349n	0	\
-350n	Set_V	\
-449n	Set_V	\
-450n	0	\
-499n	0	\
-500n	Reset_V	\
-599n	Reset_V	\
-600n	0	\
-649n	0	\
-650n	0	\
-699n	0	\
-750n	0	\
-799n	0	\
-800n	0	\
-849n	0	\
-900n	0	\
-949n	0	\
-950n	0	\
-999n	0	\
-1050n	0	\
-1099n	0	\
-1100n	0	\
-1149n	0	\
-1200n	0	\
-1249n	0	\
-1250n	Read_V	\
-1349n	Read_V	\
-1350n	0	\
-1399n	0	\
-1400n	Read_V	\
-1499n	Read_V	\
-1500n	0	\
-1549n	0	\
-1550n	Read_V	\
-1649n	Read_V	\
-1650n	0	\
-1699n	0	\
-1700n	Read_V	\
-1799n	Read_V	\
-1800n	0	\
-1849n	0	\
-]
-V_SEL1(g1 0) vsource type=pwl wave=[\
-0n	0	\
-49n	0	\
-150n	0	\
-199n	0	\
-300n	0	\
-349n	0	\
 350n	Gate_V	\
 449n	Gate_V	\
 450n	0	\
 499n	0	\
-500n	Gate_V	\
-599n	Gate_V	\
-600n	0	\
-649n	0	\
-750n	0	\
-799n	0	\
-900n	0	\
-949n	0	\
-1050n	0	\
-1099n	0	\
-1200n	0	\
-1249n	0	\
-1250n	Gate_V	\
-1349n	Gate_V	\
-1350n	0	\
-1399n	0	\
-1400n	Gate_V	\
-1499n	Gate_V	\
-1500n	0	\
-1549n	0	\
-1550n	Gate_V	\
-1649n	Gate_V	\
-1650n	0	\
-1699n	0	\
-1700n	Gate_V	\
-1799n	Gate_V	\
-1800n	0	\
-1849n	0	\
 ]
 
 
 
-V_BL00(c00 0) vsource type=pwl wave=[\
+V_BL0(c0 0) vsource type=pwl wave=[\
 0n	0	\
 49n	0	\
 50n	0	\
 149n	0	\
 150n	0	\
 199n	0	\
-200n	Reset_V	\
-299n	Reset_V	\
-300n	0	\
-349n	0	\
-650n	0	\
-749n	0	\
-750n	0	\
-799n	0	\
-800n	Read_V	\
-899n	Read_V	\
-900n	0	\
-949n	0	\
-950n	Read_V	\
-1049n	Read_V	\
-1050n	0	\
-1099n	0	\
-1100n	Read_V	\
-1199n	Read_V	\
-1200n	0	\
-1249n	0	\
-]
-
-V_BL01(c01 0) vsource type=pwl wave=[\
-0n	0	\
-49n	0	\
-50n	Set_V	\
-149n	Set_V	\
-150n	0	\
-199n	0	\
 200n	0	\
 299n	0	\
 300n	0	\
 349n	0	\
-650n	Read_V	\
-749n	Read_V	\
-750n	0	\
-799n	0	\
-800n	0	\
-899n	0	\
-900n	0	\
-949n	0	\
-950n	Read_V	\
-1049n	Read_V	\
-1050n	0	\
-1099n	0	\
-1100n	Read_V	\
-1199n	Read_V	\
-1200n	0	\
-1249n	0	\
+350n	0	\
+449n	0	\
+450n	0	\
+499n	0	\
 ]
 
-V_BL02(c02 0) vsource type=pwl wave=[\
+V_BL1(c1 0) vsource type=pwl wave=[\
 0n	0	\
 49n	0	\
 50n	0	\
 149n	0	\
 150n	0	\
 199n	0	\
-200n	Reset_V	\
-299n	Reset_V	\
-300n	0	\
-349n	0	\
-650n	Read_V	\
-749n	Read_V	\
-750n	0	\
-799n	0	\
-800n	Read_V	\
-899n	Read_V	\
-900n	0	\
-949n	0	\
-950n	0	\
-1049n	0	\
-1050n	0	\
-1099n	0	\
-1100n	Read_V	\
-1199n	Read_V	\
-1200n	0	\
-1249n	0	\
-]
-
-V_BL03(c03 0) vsource type=pwl wave=[\
-0n	0	\
-49n	0	\
-50n	Set_V	\
-149n	Set_V	\
-150n	0	\
-199n	0	\
 200n	0	\
 299n	0	\
 300n	0	\
 349n	0	\
-650n	Read_V	\
-749n	Read_V	\
-750n	0	\
-799n	0	\
-800n	Read_V	\
-899n	Read_V	\
-900n	0	\
-949n	0	\
-950n	Read_V	\
-1049n	Read_V	\
-1050n	0	\
-1099n	0	\
-1100n	0	\
-1199n	0	\
-1200n	0	\
-1249n	0	\
-]
-
-V_BL10(c10 0) vsource type=pwl wave=[\
-0n	0	\
-49n	0	\
-350n	Set_V	\
-449n	Set_V	\
-450n	0	\
-499n	0	\
-500n	0	\
-599n	0	\
-600n	0	\
-649n	0	\
-1250n	0	\
-1349n	0	\
-1350n	0	\
-1399n	0	\
-1400n	Read_V	\
-1499n	Read_V	\
-1500n	0	\
-1549n	0	\
-1550n	Read_V	\
-1649n	Read_V	\
-1650n	0	\
-1699n	0	\
-1700n	Read_V	\
-1799n	Read_V	\
-1800n	0	\
-1849n	0	\
-]
-
-V_BL11(c11 0) vsource type=pwl wave=[\
-0n	0	\
-49n	0	\
 350n	0	\
 449n	0	\
 450n	0	\
 499n	0	\
-500n	Reset_V	\
-599n	Reset_V	\
-600n	0	\
-649n	0	\
-1250n	Read_V	\
-1349n	Read_V	\
-1350n	0	\
-1399n	0	\
-1400n	0	\
-1499n	0	\
-1500n	0	\
-1549n	0	\
-1550n	Read_V	\
-1649n	Read_V	\
-1650n	0	\
-1699n	0	\
-1700n	Read_V	\
-1799n	Read_V	\
-1800n	0	\
-1849n	0	\
-]
-
-V_BL12(c12 0) vsource type=pwl wave=[\
-0n	0	\
-49n	0	\
-350n	Set_V	\
-449n	Set_V	\
-450n	0	\
-499n	0	\
-500n	0	\
-599n	0	\
-600n	0	\
-649n	0	\
-1250n	Read_V	\
-1349n	Read_V	\
-1350n	0	\
-1399n	0	\
-1400n	Read_V	\
-1499n	Read_V	\
-1500n	0	\
-1549n	0	\
-1550n	0	\
-1649n	0	\
-1650n	0	\
-1699n	0	\
-1700n	Read_V	\
-1799n	Read_V	\
-1800n	0	\
-1849n	0	\
-]
-
-V_BL13(c13 0) vsource type=pwl wave=[\
-0n	0	\
-49n	0	\
-350n	0	\
-449n	0	\
-450n	0	\
-499n	0	\
-500n	Reset_V	\
-599n	Reset_V	\
-600n	0	\
-649n	0	\
-1250n	Read_V	\
-1349n	Read_V	\
-1350n	0	\
-1399n	0	\
-1400n	Read_V	\
-1499n	Read_V	\
-1500n	0	\
-1549n	0	\
-1550n	Read_V	\
-1649n	Read_V	\
-1650n	0	\
-1699n	0	\
-1700n	0	\
-1799n	0	\
-1800n	0	\
-1849n	0	\
 ]
 

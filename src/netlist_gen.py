@@ -148,7 +148,9 @@ class netlist_design(parameters):
 							
 
 				for k in range(0, self.columns):
+					
 					if k != column:
+						
 						BL_voltage[k].append(str(i)+time_unit)
 						BL_voltage[k].append(pulse_vol)
 						BL_voltage[k].append(str(i+(self.step_time-1))+time_unit)
@@ -214,16 +216,16 @@ class netlist_design(parameters):
 
 				
 				for k in range(0, self.columns):
-						BL_voltage[k].append(str(i)+time_unit)
-						BL_voltage[k].append("0")
-						BL_voltage[k].append(str(i+(self.period-1))+time_unit)
-						BL_voltage[k].append("0")  
+					BL_voltage[k].append(str(i)+time_unit)
+					BL_voltage[k].append("0")
+					BL_voltage[k].append(str(i+(self.period-1))+time_unit)
+					BL_voltage[k].append("0")  
 				
 				for k in range(0, self.rows):
-						SEL_voltage[k].append(str(i)+time_unit)
-						SEL_voltage[k].append("0")
-						SEL_voltage[k].append(str(i+(self.period-1))+time_unit)
-						SEL_voltage[k].append("0")
+					SEL_voltage[k].append(str(i)+time_unit)
+					SEL_voltage[k].append("0")
+					SEL_voltage[k].append(str(i+(self.period-1))+time_unit)
+					SEL_voltage[k].append("0")
 
 				
 				insert_p = True		
@@ -263,7 +265,7 @@ class netlist_design(parameters):
 
 		WL_pulses = [[] for _ in range(self.rows)]
 		SEL_voltage = [[] for _ in range(self.rows)]
-		BL_voltage = [[[] for i in range(0,self.columns)] for _ in range(self.rows)]
+		BL_voltage = [[] for _ in range(self.columns)]
 
 		if self.input_type == 0 or self.input_type == 1:	#cell by cell or row by row
 			for s in in_pulses_list:
@@ -287,9 +289,9 @@ class netlist_design(parameters):
 			SET_CELLS = [[] for _ in range(self.rows)]
 			RESET_CELLS = [[] for _ in range(self.rows)]
 			READ_CELLS = [[] for _ in range(self.rows)]
-			#READ_CELLS = {}
 
-			order = 0
+			read_flag = 0
+
 			for s in in_pulses_list:
 				row,column = int(s[1]), int(s[2])
 
@@ -299,41 +301,60 @@ class netlist_design(parameters):
 
 				if s[0].lower() == "set":
 					SET_CELLS[row].append(column)
-					order = 1
+					if read_flag == 0 and any(READ_CELLS):
+						# set cells to read and empty the list
+						rowB = 0
+						for reads in READ_CELLS:
+							print(reads)
+							self.create_pulse2("Read_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, reads, rowB)
+							rowB += 1
+						for i in range(0, len(READ_CELLS)):
+							READ_CELLS[i].clear()
+						read_flag = 1
+						
 				elif s[0].lower() == "reset":
 					RESET_CELLS[row].append(column)
-					order = 1
+					if read_flag == 0 and any(READ_CELLS):
+						# set cells to read and empty the list
+						rowB = 0
+						for reads in READ_CELLS:
+							self.create_pulse2("Read_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, reads, rowB)
+							rowB += 1
+						for i in range(0, len(READ_CELLS)):
+							READ_CELLS[i].clear()
+						read_flag = 1
+
 				elif s[0].lower() == "read":
-					#READ_CELLS[row]['order'] = column
+					#READ_CELLS[row]['read_flag'] = column
 					READ_CELLS[row].append(column)
-					if order == 0:
-						self.create_pulse("Read_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage[row], row, column, gate_level)
-					else:
-						rowB = row
-						row = 0
+					if read_flag != 0 or any(SET_CELLS) or any(RESET_CELLS):
 						for sets, reset in zip(SET_CELLS, RESET_CELLS):
-							if sets: self.create_pulse2("Set_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage[row], sets, row)
-							if reset: self.create_pulse2("Reset_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage[row], reset, row)
-
-							
-							row += 1
-
-						self.create_pulse("Read_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage[rowB], rowB, column, gate_level)
+							print(sets)
+							if sets: self.create_pulse2("Set_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, sets, row)
+							if reset: self.create_pulse2("Reset_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, reset, row)						
 						for i in range(0, len(SET_CELLS)):
 							SET_CELLS[i].clear()
 						for i in range(0, len(RESET_CELLS)):
 							RESET_CELLS[i].clear()
-						order = 0
 
-			row = 0
-			for sets, reset in zip(SET_CELLS, RESET_CELLS):
-				if sets: self.create_pulse2("Set_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, sets, row)
-				if reset: self.create_pulse2("Reset_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, reset, row)
+						read_flag = 0
+			
+			if any(READ_CELLS):
+				rowB = 0
+				for reads in READ_CELLS:
+					self.create_pulse2("Read_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, reads, rowB)
+					rowB += 1
 
-				row += 1
-			SET_CELLS.clear()
-			RESET_CELLS.clear()	
-			order = 0
+			if any(SET_CELLS) or any(RESET_CELLS):
+				row = 0
+				for sets, reset in zip(SET_CELLS, RESET_CELLS):
+					if sets: self.create_pulse2("Set_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, sets, row)
+					if reset: self.create_pulse2("Reset_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, reset, row)
+
+					row += 1
+				SET_CELLS.clear()
+				RESET_CELLS.clear()	
+				read_flag = 0
 
 
 
@@ -354,12 +375,12 @@ class netlist_design(parameters):
 
 
 		pulses_str += "\n\n"
-		for i in range(0, self.rows):
-			for j in range(0, self.columns):
-				pulses_str += f"V_BL{i}{j}(c{i}{j} 0) vsource type=pwl wave=[\\\n"
-				for k in range(0, len(BL_voltage[i][j])-1, 2):
-					pulses_str += BL_voltage[i][j][k] + '\t' + BL_voltage[i][j][k+1] + '\t\\\n'
-				pulses_str += ']\n\n'
+
+		for j in range(0, self.columns):
+			pulses_str += f"V_BL{j}(c{j} 0) vsource type=pwl wave=[\\\n"
+			for k in range(0, len(BL_voltage[j])-1, 2):
+				pulses_str += BL_voltage[j][k] + '\t' + BL_voltage[j][k+1] + '\t\\\n'
+			pulses_str += ']\n\n'
 			
 		
 		return pulses_str
@@ -432,10 +453,9 @@ class netlist_design(parameters):
 		str_ckt += "ends XBAR_CELL\n\n"
 
 		k = 0
-		for i in range(0, self.rows):
-			for j in range(0, self.columns):
-				str_instances += f"I{k} (r{i} c{i}{j} g{i}) XBAR_CELL\n"
-				k += 1
+		for i in range(0, self.columns):
+			str_instances += f"I{k} (r{i} c{i} g{i}) XBAR_CELL\n"
+			k += 1
 
 		str_pulses += "\n\n" + self.pulses_to_string(pulses)
 		#str_pulses += "\nV1 (c0  0) vsource dc=0\n\n\n"
