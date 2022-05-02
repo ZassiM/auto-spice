@@ -1,3 +1,5 @@
-l = []*5
+a = 5
+b = [a]
 
-print(l)
+for i in b:
+    print(i)
