@@ -33,7 +33,7 @@ if len(sys.argv) > 1 and str(sys.argv[1]) == 'sample':
 with open(CONFIG_FILEPATH, 'r', encoding="utf-8") as file:
     config = json.load(file)
 
-    input_type = config['input_type']['row_by_row']
+    input_type = config['input_type']
 
     sim_params = config["sim_params"]
     sim_type, step_time, period, max_step, time_unit = sim_params['type'], sim_params['step_time'], sim_params['period'], sim_params['max_step'],sim_params['time_units']
@@ -66,7 +66,7 @@ with open(CONFIG_FILEPATH, 'r', encoding="utf-8") as file:
         sweep_params = [min_gate, max_gate, step_gate]		
 
 
-if input_type == 1 or input_type == 2:
+if input_type == 2 or input_type == 3:
     with open(ROW_INPUT_FILEPATH, 'r', encoding="utf-8") as file:
         reader = csv.reader(file)
         row_pulses_list = list(filter(None,reader))
@@ -75,7 +75,10 @@ if input_type == 1 or input_type == 2:
 with open(PULSES_INPUT_FILEPATH, 'r', encoding="utf-8") as file:
     reader = csv.reader(file)
     in_pulses_list = list(reader)
-    print(in_pulses_list)
+    
+if input_type != 1 and input_type != 2 and input_type != 3:
+    print("Invalid input type! Valid values: 1, 2, 3.\n")
+    sys.exit()
 
 if not in_pulses_list:
     print("No pulses input! Terminating program...")

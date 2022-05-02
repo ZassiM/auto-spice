@@ -1,7 +1,5 @@
 {
-    "input_type":{
-        "row_by_row": 1
-    },
+    "input_type": 5,
 
     "sim_params": {
         "type" : "tran",

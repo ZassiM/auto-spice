@@ -1,5 +1,6 @@
-a = 5
-b = [a]
 
-for i in b:
-    print(i)
+
+while val!=7:
+	val=input("Enter 7: ")
+
+print("\nGood")

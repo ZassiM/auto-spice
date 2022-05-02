@@ -52,10 +52,10 @@ class netlist_design(parameters):
 		return var_param
 
 
-	def append_pulse(self, pulse_list, idx, value, time):
+	def append_pulse(self, pulse_list, idx, value, time, step):
 		pulse_list[idx].append(str(time) + self.time_unit)
 		pulse_list[idx].append(value)
-		pulse_list[idx].append(str(time+(self.period-1))+ self.time_unit)
+		pulse_list[idx].append(str(time+(step-1))+ self.time_unit)
 		pulse_list[idx].append(value)
 		
 	def update_pulses(self, pulse_vol, WL_pulses, SEL_voltage, BL_voltage, cells, row, gate_level):
@@ -79,37 +79,37 @@ class netlist_design(parameters):
 
 			for k in range(0,self.rows):
 				if k != row:
-					self.append_pulse(WL_pulses, k, '0', t)
+					self.append_pulse(WL_pulses, k, '0', t, self.step_time)
 
 
 			if insert_zeros == False and concatenated == False:
-				self.append_pulse(WL_pulses, row, '0', t)
+				self.append_pulse(WL_pulses, row, '0', t, self.period)
 
 				for k in range(0, self.columns):
-					self.append_pulse(BL_voltage, k, '0', t)
+					self.append_pulse(BL_voltage, k, '0', t, self.period)
 
 				for k in range(0, self.rows):
-					self.append_pulse(SEL_voltage, k, '0', t)
+					self.append_pulse(SEL_voltage, k, '0', t, self.period)
 
+				insert_zeros = True
+				concatenated = True		
 				
-				insert_zeros = True		
-				concatenated = True
 
 			else:
-				self.append_pulse(WL_pulses, row, pulse_vol, t)
+				self.append_pulse(WL_pulses, row, pulse_vol, t, self.step_time)
 
 				for k in cells:
-					self.append_pulse(BL_voltage, k, '0', t)
+					self.append_pulse(BL_voltage, k, '0', t, self.step_time)
 
-				if gate_level == None or gate_level == '1':
-					self.append_pulse(SEL_voltage, row, 'Gate_V', t)
+				if gate_level == None:
+					self.append_pulse(SEL_voltage, row, 'Gate_V', t, self.step_time)
 
 				else:
-					self.append_pulse(SEL_voltage, row, gate_level, t)
+					self.append_pulse(SEL_voltage, row, gate_level, t, self.step_time)
 		
 				for k in range(0, self.columns):
 					if k not in cells:
-						self.append_pulse(BL_voltage, k, pulse_vol, t)
+						self.append_pulse(BL_voltage, k, pulse_vol, t, self.step_time)
 						
 				insert_zeros = False
 				concatenated = False
@@ -122,24 +122,14 @@ class netlist_design(parameters):
 		BL_voltage = [[] for _ in range(self.columns)]
 
 		for k in range (0, self.columns):
-			BL_voltage[k].append(str(0) + self.time_unit)
-			BL_voltage[k].append('0')
-			BL_voltage[k].append(str(0+(self.period-1)) + self.time_unit)
-			BL_voltage[k].append('0')
+			self.append_pulse(BL_voltage, k, '0', 0, self.period)
 
 		for k in range (0,self.rows):
-			SEL_voltage[k].append(str(0) + self.time_unit)
-			SEL_voltage[k].append('0')
-			SEL_voltage[k].append(str(0+(self.period-1)) + self.time_unit)
-			SEL_voltage[k].append('0')
+			self.append_pulse(SEL_voltage, k, '0', 0, self.period)
+			self.append_pulse(WL_pulses, k, '0', 0, self.period)
 
-		for k in range(0,self.rows):
-			WL_pulses[k].append(str(0) + self.time_unit)
-			WL_pulses[k].append('0')
-			WL_pulses[k].append(str(0+(self.period-1))+ self.time_unit)
-			WL_pulses[k].append('0')
 
-		if self.input_type == 0:	#cell by cell with multiple state
+		if self.input_type == 1:	#cell by cell with multiple state
 			
 			for s in in_pulses_list:
 				if s:
@@ -158,7 +148,7 @@ class netlist_design(parameters):
 					elif s[0].lower() == "reset":
 						self.update_pulses("Reset_V", WL_pulses, SEL_voltage, BL_voltage, column, row, gate_level)
 		
-		elif self.input_type == 1: #row by row with multiple state
+		elif self.input_type == 2: #row by row with multiple state
 			READ_CELLS = []
 
 			for s in in_pulses_list:
@@ -169,7 +159,6 @@ class netlist_design(parameters):
 					
 					continue
 
-				
 				row,column = int(s[1]), int(s[2])
 				
 				gate_level = None
@@ -189,7 +178,7 @@ class netlist_design(parameters):
 				READ_CELLS = []
 
 
-		elif self.input_type == 2:  #binary operation in parallel
+		elif self.input_type == 3:  #binary operation in parallel
 
 			SET_CELLS = []
 			RESET_CELLS = []
@@ -197,9 +186,7 @@ class netlist_design(parameters):
 
 
 			for s in in_pulses_list:
-
 				if not s:
-
 					if SET_CELLS:
 						self.update_pulses("Set_V", WL_pulses, SEL_voltage, BL_voltage, SET_CELLS, row, None)
 						SET_CELLS = []
@@ -212,7 +199,6 @@ class netlist_design(parameters):
 					
 					continue
 
-				
 				row,column = int(s[1]), int(s[2])
 
 				if s[0].lower() == "set":
@@ -233,6 +219,7 @@ class netlist_design(parameters):
 			if READ_CELLS:
 				self.update_pulses("Read_V", WL_pulses, SEL_voltage, BL_voltage, READ_CELLS, row, None)
 				READ_CELLS = []
+
 
 		pulses_str = ""
 		c = 0
@@ -258,6 +245,7 @@ class netlist_design(parameters):
 			
 		
 		return pulses_str
+
 
 	def pulses_to_file(self, row_list, filename):
 
@@ -309,8 +297,6 @@ class netlist_design(parameters):
 
 	def gen_netlist(self,memristor_params= {}, pulses = [], sweep_params = [], file_name = "", memristor_model_path = "", transistor_model_path = ""):
 
-		print("Generating netlist...\n")
-		
 		str_param = ""
 		str_ckt = ""
 		str_instances = ""
@@ -320,7 +306,7 @@ class netlist_design(parameters):
 		str_param += "ahdl_include " + "\"" + memristor_model_path + "\"" + "\n"
 		str_param += "include " + "\"" + transistor_model_path + "\"" + "\n" 
 		str_param += f"simulatorOptions options vabstol = {self.vabstol} iabstol = {self.iabstol} temp = {self.temp} tnom = {self.tnom} gmin = {self.gmin}\n"
-		str_param += f"trans {self.simulation_type} stop =  1000n maxstep = {self.simulation_maxstep} errpreset=conservative\n"
+		str_param += f"trans {self.simulation_type} stop =  {self.simulation_stop_time} maxstep = {self.simulation_maxstep} errpreset=conservative\n"
 		str_param += f"saveOptions options save=all currents=all saveahdlvars=all\n"
 		str_param += f"parameters Read_V = {self.read_v} Set_V = {self.set_v} Reset_V = {self.reset_v} Gate_V = {self.gate_v} Transistor_Width = {self.trans_width}n Transistor_Length = {self.trans_length}n\n"
 		if memristor_params: str_param += "parameters " + self.parameters_list(param=memristor_params) + "\n"
@@ -339,7 +325,7 @@ class netlist_design(parameters):
 				k += 1
 
 		str_pulses += "\n\n" + self.pulses_to_string(pulses)
-		#str_pulses += "\nV1 (c0  0) vsource dc=0\n\n\n"
+		
 
 
 		if sweep_params:
