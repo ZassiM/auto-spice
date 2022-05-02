@@ -1,9 +1,19 @@
 Read,0,0
 Read,0,1
+Read,0,2
 
 Set,0,0,1
-Set,0,1,1
+Reset,0,1
+Set,0,2,1
 
-Read,0,0
-Read,0,1
+Read,1,0
+Read,1,1
+Read,1,2
 
+Reset,1,0
+Set,1,1,1
+Reset,1,2
+
+Read,1,0
+Read,1,1
+Read,1,2

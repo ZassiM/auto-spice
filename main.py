@@ -36,7 +36,7 @@ with open(CONFIG_FILEPATH, 'r', encoding="utf-8") as file:
     input_type = config['input_type']['row_by_row']
 
     sim_params = config["sim_params"]
-    sim_type, step_time, period, max_step, time_units = sim_params['type'], sim_params['step_time'], sim_params['period'], sim_params['max_step'],sim_params['time_units']
+    sim_type, step_time, period, max_step, time_unit = sim_params['type'], sim_params['step_time'], sim_params['period'], sim_params['max_step'],sim_params['time_units']
 
     vabstol, iabstol, temp, tnom, gmin = sim_params['vabstol'], sim_params['iabstol'], sim_params['temp'], sim_params['tnom'], sim_params['gmin']
 
@@ -74,15 +74,17 @@ if input_type == 1 or input_type == 2:
 
 with open(PULSES_INPUT_FILEPATH, 'r', encoding="utf-8") as file:
     reader = csv.reader(file)
-    in_pulses_list = list(filter(None,reader))
+    in_pulses_list = list(reader)
+    print(in_pulses_list)
+
 if not in_pulses_list:
     print("No pulses input! Terminating program...")
     sys.exit()
 
 
 circuit.calculate_xbar_size(in_pulses_list)
-circuit.set_crossbar_params(read_v, set_v, reset_v, gate_v, transistor_lenght, transistor_width, input_type)
-circuit.set_simulation_params(sim_type, step_time, period, max_step, time_units, vabstol, iabstol, temp, tnom, gmin, in_pulses_list)
+circuit.set_crossbar_params(read_v, set_v, reset_v, gate_v, transistor_lenght, transistor_width)
+circuit.set_simulation_params(sim_type, step_time, period, max_step, time_unit, vabstol, iabstol, temp, tnom, gmin, in_pulses_list, input_type)
 
 var_bools = circuit.set_variablity(Nmin = nmin_b, Nmax = nmax_b, ldet = ldet_b, rdet = rdet_b)	
 var_param = circuit.update_param(mean_sigma, var_bools)	

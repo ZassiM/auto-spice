@@ -6,9 +6,9 @@
     "sim_params": {
         "type" : "tran",
         "max_step" : 1,
-        "step_time" : 100,
+        "step_time" : 1000,
         "period" : 50,
-        "time_units" : "n",
+        "time_units" : "u",
         "vabstol" : 1e-6,
         "iabstol" : 1e-12,
         "temp" : 27,

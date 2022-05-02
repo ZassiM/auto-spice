@@ -60,26 +60,11 @@ class netlist_design(parameters):
 		insert_p = False
 		concatenated = False
 
-		if not any(BL_voltage):
-			for k in range (0, self.columns):
-				BL_voltage[k].append(str(0) + time_unit)
-				BL_voltage[k].append('0')
-				BL_voltage[k].append(str(0+(self.period-1))+time_unit)
-				BL_voltage[k].append('0')
-
-		if not any(SEL_voltage):
-			for k in range (0,self.rows):
-				SEL_voltage[k].append(str(0) + time_unit)
-				SEL_voltage[k].append('0')
-				SEL_voltage[k].append(str(0+(self.period-1))+time_unit)
-				SEL_voltage[k].append('0')
-
-
 		if not any(WL_pulse):
 			for k in range(0,self.rows):
-				WL_pulse[k].append(str(0) + time_unit)
+				WL_pulse[k].append(str(0) + self.time_unit)
 				WL_pulse[k].append('0')
-				WL_pulse[k].append(str(0+(self.period-1))+time_unit)
+				WL_pulse[k].append(str(0+(self.period-1))+ self.time_unit)
 				WL_pulse[k].append('0')
 				
 			start_time = self.period
@@ -96,53 +81,53 @@ class netlist_design(parameters):
 
 			for k in range(0,self.rows):
 				if k != row:
-					WL_pulse[k].append(str(i) + time_unit)
+					WL_pulse[k].append(str(i) + self.time_unit)
 					WL_pulse[k].append('0')
-					WL_pulse[k].append(str(i+(self.period-1))+time_unit)
+					WL_pulse[k].append(str(i+(self.period-1))+ self.time_unit)
 					WL_pulse[k].append('0')
 
 			if insert_p == False and concatenated == False:
-				WL_pulse[row].append(str(i)+time_unit)
+				WL_pulse[row].append(str(i)+ self.time_unit)
 				WL_pulse[row].append('0')
-				WL_pulse[row].append(str(i+(self.period-1))+time_unit)
+				WL_pulse[row].append(str(i+(self.period-1))+ self.time_unit)
 				WL_pulse[row].append('0')
 
 				for k in range(0, self.columns):
-						BL_voltage[k].append(str(i)+time_unit)
+						BL_voltage[k].append(str(i)+ self.time_unit)
 						BL_voltage[k].append("0")
-						BL_voltage[k].append(str(i+(self.period-1))+time_unit)
+						BL_voltage[k].append(str(i+(self.period-1))+ self.time_unit)
 						BL_voltage[k].append("0")  
 				
 				for k in range(0, self.rows):
-						SEL_voltage[k].append(str(i)+time_unit)
+						SEL_voltage[k].append(str(i)+ self.time_unit)
 						SEL_voltage[k].append("0")
-						SEL_voltage[k].append(str(i+(self.period-1))+time_unit)
+						SEL_voltage[k].append(str(i+(self.period-1))+ self.time_unit)
 						SEL_voltage[k].append("0")
 
 				concatenated = True
 				insert_p = True		
 
 			else:
-				WL_pulse[row].append(str(i)+time_unit)
+				WL_pulse[row].append(str(i)+ self.time_unit)
 				WL_pulse[row].append(pulse_vol)
-				WL_pulse[row].append(str(i+(self.step_time-1))+time_unit)
+				WL_pulse[row].append(str(i+(self.step_time-1))+ self.time_unit)
 				WL_pulse[row].append(pulse_vol)
 
-				BL_voltage[column].append(str(i)+time_unit)
+				BL_voltage[column].append(str(i)+ self.time_unit)
 				BL_voltage[column].append("0")
-				BL_voltage[column].append(str(i+(self.step_time-1))+time_unit)
+				BL_voltage[column].append(str(i+(self.step_time-1))+ self.time_unit)
 				BL_voltage[column].append("0")
 				
 				if gate_level == None or gate_level == '1':
-					SEL_voltage[row].append(str(i)+time_unit)
+					SEL_voltage[row].append(str(i)+ self.time_unit)
 					SEL_voltage[row].append("Gate_V")
-					SEL_voltage[row].append(str(i+(self.step_time-1))+time_unit)
+					SEL_voltage[row].append(str(i+(self.step_time-1))+ self.time_unit)
 					SEL_voltage[row].append("Gate_V")
 
 				else:
-					SEL_voltage[row].append(str(i)+time_unit)
+					SEL_voltage[row].append(str(i)+ self.time_unit)
 					SEL_voltage[row].append(gate_level)
-					SEL_voltage[row].append(str(i+(self.step_time-1))+time_unit)
+					SEL_voltage[row].append(str(i+(self.step_time-1))+ self.time_unit)
 					SEL_voltage[row].append(gate_level)
 
 							
@@ -151,40 +136,27 @@ class netlist_design(parameters):
 					
 					if k != column:
 						
-						BL_voltage[k].append(str(i)+time_unit)
+						BL_voltage[k].append(str(i)+ self.time_unit)
 						BL_voltage[k].append(pulse_vol)
-						BL_voltage[k].append(str(i+(self.step_time-1))+time_unit)
+						BL_voltage[k].append(str(i+(self.step_time-1))+ self.time_unit)
 						BL_voltage[k].append(pulse_vol)  
 
 				insert_p = False
 				concatenated = False
 
 	
-	def create_pulse2(self, pulse_vol,time_unit, WL_pulse, SEL_voltage, BL_voltage, cells, row):
+	def create_pulse2(self, pulse_vol, WL_pulse, SEL_voltage, BL_voltage, cells, row):
 
 
 		insert_p = False
 		concatenated = False
 
-		if not any(BL_voltage):
-			for k in range (0, self.columns):
-				BL_voltage[k].append(str(0) + time_unit)
-				BL_voltage[k].append('0')
-				BL_voltage[k].append(str(0+(self.period-1))+time_unit)
-				BL_voltage[k].append('0')
-
-		if not any(SEL_voltage):
-			for k in range (0,self.rows):
-				SEL_voltage[k].append(str(0) + time_unit)
-				SEL_voltage[k].append('0')
-				SEL_voltage[k].append(str(0+(self.period-1))+time_unit)
-				SEL_voltage[k].append('0')
 
 		if not any(WL_pulse):
 			for k in range(0,self.rows):
-				WL_pulse[k].append(str(0) + time_unit)
+				WL_pulse[k].append(str(0) + self.time_unit)
 				WL_pulse[k].append('0')
-				WL_pulse[k].append(str(0+(self.period-1))+time_unit)
+				WL_pulse[k].append(str(0+(self.period-1))+ self.time_unit)
 				WL_pulse[k].append('0')
 			
 			start_time = self.period
@@ -203,28 +175,28 @@ class netlist_design(parameters):
 
 			for k in range(0,self.rows):
 				if k != row:
-					WL_pulse[k].append(str(i) + time_unit)
+					WL_pulse[k].append(str(i) + self.time_unit)
 					WL_pulse[k].append('0')
-					WL_pulse[k].append(str(i+(self.period-1))+time_unit)
+					WL_pulse[k].append(str(i+(self.period-1))+ self.time_unit)
 					WL_pulse[k].append('0')
 
 			if insert_p == False and concatenated == False:
-				WL_pulse[row].append(str(i)+time_unit)
+				WL_pulse[row].append(str(i)+ self.time_unit)
 				WL_pulse[row].append('0')
-				WL_pulse[row].append(str(i+(self.period-1))+time_unit)
+				WL_pulse[row].append(str(i+(self.period-1))+ self.time_unit)
 				WL_pulse[row].append('0')
 
 				
 				for k in range(0, self.columns):
-					BL_voltage[k].append(str(i)+time_unit)
+					BL_voltage[k].append(str(i)+ self.time_unit)
 					BL_voltage[k].append("0")
-					BL_voltage[k].append(str(i+(self.period-1))+time_unit)
+					BL_voltage[k].append(str(i+(self.period-1))+ self.time_unit)
 					BL_voltage[k].append("0")  
 				
 				for k in range(0, self.rows):
-					SEL_voltage[k].append(str(i)+time_unit)
+					SEL_voltage[k].append(str(i)+ self.time_unit)
 					SEL_voltage[k].append("0")
-					SEL_voltage[k].append(str(i+(self.period-1))+time_unit)
+					SEL_voltage[k].append(str(i+(self.period-1))+ self.time_unit)
 					SEL_voltage[k].append("0")
 
 				
@@ -232,29 +204,29 @@ class netlist_design(parameters):
 				concatenated = True
 
 			else:
-				WL_pulse[row].append(str(i)+time_unit)
+				WL_pulse[row].append(str(i)+ self.time_unit)
 				WL_pulse[row].append(pulse_vol)
-				WL_pulse[row].append(str(i+(self.step_time-1))+time_unit)
+				WL_pulse[row].append(str(i+(self.step_time-1))+ self.time_unit)
 				WL_pulse[row].append(pulse_vol)
 
 				for k in cells:
-					BL_voltage[k].append(str(i)+time_unit)
+					BL_voltage[k].append(str(i)+ self.time_unit)
 					BL_voltage[k].append("0")
-					BL_voltage[k].append(str(i+(self.step_time-1))+time_unit)
+					BL_voltage[k].append(str(i+(self.step_time-1))+ self.time_unit)
 					BL_voltage[k].append("0")
 				
 
-				SEL_voltage[row].append(str(i)+time_unit)
+				SEL_voltage[row].append(str(i)+ self.time_unit)
 				SEL_voltage[row].append("Gate_V")
-				SEL_voltage[row].append(str(i+(self.step_time-1))+time_unit)
+				SEL_voltage[row].append(str(i+(self.step_time-1))+ self.time_unit)
 				SEL_voltage[row].append("Gate_V")
 
 							
 				for k in range(0, self.columns):
 					if k not in cells:
-						BL_voltage[k].append(str(i)+time_unit)
+						BL_voltage[k].append(str(i)+ self.time_unit)
 						BL_voltage[k].append(pulse_vol)
-						BL_voltage[k].append(str(i+(self.step_time-1))+time_unit)
+						BL_voltage[k].append(str(i+(self.step_time-1))+ self.time_unit)
 						BL_voltage[k].append(pulse_vol)  
 
 				insert_p = False
@@ -267,6 +239,18 @@ class netlist_design(parameters):
 		SEL_voltage = [[] for _ in range(self.rows)]
 		BL_voltage = [[] for _ in range(self.columns)]
 
+		for k in range (0, self.columns):
+			BL_voltage[k].append(str(0) + self.time_unit)
+			BL_voltage[k].append('0')
+			BL_voltage[k].append(str(0+(self.period-1)) + self.time_unit)
+			BL_voltage[k].append('0')
+
+		for k in range (0,self.rows):
+			SEL_voltage[k].append(str(0) + self.time_unit)
+			SEL_voltage[k].append('0')
+			SEL_voltage[k].append(str(0+(self.period-1)) + self.time_unit)
+			SEL_voltage[k].append('0')
+
 		if self.input_type == 0 or self.input_type == 1:	#cell by cell or row by row
 			for s in in_pulses_list:
 				
@@ -276,90 +260,70 @@ class netlist_design(parameters):
 					gate_level = s[3]
 
 				if s[0].lower() == "read":
-					self.create_pulse("Read_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, row, column, gate_level)
+					self.create_pulse("Read_V", WL_pulses, SEL_voltage, BL_voltage, row, column, gate_level)
 					
 				elif s[0].lower() == "set":
-					self.create_pulse("Set_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, row, column, gate_level)
+					self.create_pulse("Set_V", WL_pulses, SEL_voltage, BL_voltage, row, column, gate_level)
 
 				elif s[0].lower() == "reset":
-					self.create_pulse("Reset_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, row, column, gate_level)
+					self.create_pulse("Reset_V", WL_pulses, SEL_voltage, BL_voltage, row, column, gate_level)
 		
 
 		elif self.input_type == 2:  #binary parallel op
-			SET_CELLS = [[] for _ in range(self.rows)]
-			RESET_CELLS = [[] for _ in range(self.rows)]
-			READ_CELLS = [[] for _ in range(self.rows)]
 
-			read_flag = 0
+			SET_CELLS = []
+			RESET_CELLS = []
+			READ_CELLS = []
+
 
 			for s in in_pulses_list:
+
+				if not s:
+					print("\n****************")
+					print(f"**[{row}] set {SET_CELLS}")
+					print(f"**[{row}] res {RESET_CELLS}")
+					print(f"**[{row}] read{READ_CELLS}")
+					print("****************")
+					if SET_CELLS:
+						print(f"[{row}] set {SET_CELLS}")
+						self.create_pulse2("Set_V", WL_pulses, SEL_voltage, BL_voltage, SET_CELLS, row)
+						SET_CELLS = []
+					if RESET_CELLS:
+						print(f"[{row}] res {RESET_CELLS}")
+						self.create_pulse2("Reset_V", WL_pulses, SEL_voltage, BL_voltage, RESET_CELLS, row)
+						RESET_CELLS = []
+					if READ_CELLS:
+						print(f"[{row}] read{READ_CELLS}")
+						self.create_pulse2("Read_V", WL_pulses, SEL_voltage, BL_voltage, READ_CELLS, row)
+						READ_CELLS = []
+					
+					continue
+
+				#else:
 				row,column = int(s[1]), int(s[2])
 
-				gate_level = None
-				if len(s) > 3:
-					gate_level = s[3]
-
 				if s[0].lower() == "set":
-					SET_CELLS[row].append(column)
-					if read_flag == 0 and any(READ_CELLS):
-						# set cells to read and empty the list
-						rowB = 0
-						for reads in READ_CELLS:
-							print(reads)
-							self.create_pulse2("Read_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, reads, rowB)
-							rowB += 1
-						for i in range(0, len(READ_CELLS)):
-							READ_CELLS[i].clear()
-						read_flag = 1
-						
+					SET_CELLS.append(column)
+		
 				elif s[0].lower() == "reset":
-					RESET_CELLS[row].append(column)
-					if read_flag == 0 and any(READ_CELLS):
-						# set cells to read and empty the list
-						rowB = 0
-						for reads in READ_CELLS:
-							self.create_pulse2("Read_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, reads, rowB)
-							rowB += 1
-						for i in range(0, len(READ_CELLS)):
-							READ_CELLS[i].clear()
-						read_flag = 1
+					RESET_CELLS.append(column)
 
 				elif s[0].lower() == "read":
-					#READ_CELLS[row]['read_flag'] = column
-					READ_CELLS[row].append(column)
-					if read_flag != 0 or any(SET_CELLS) or any(RESET_CELLS):
-						for sets, reset in zip(SET_CELLS, RESET_CELLS):
-							print(sets)
-							if sets: self.create_pulse2("Set_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, sets, row)
-							if reset: self.create_pulse2("Reset_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, reset, row)						
-						for i in range(0, len(SET_CELLS)):
-							SET_CELLS[i].clear()
-						for i in range(0, len(RESET_CELLS)):
-							RESET_CELLS[i].clear()
+					READ_CELLS.append(column)
 
-						read_flag = 0
-			
-			if any(READ_CELLS):
-				rowB = 0
-				for reads in READ_CELLS:
-					self.create_pulse2("Read_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, reads, rowB)
-					rowB += 1
+			if SET_CELLS:
+				print(f"[{row}] set {SET_CELLS}")
+				self.create_pulse2("Set_V", WL_pulses, SEL_voltage, BL_voltage, SET_CELLS, row)
+				SET_CELLS = []
+			if RESET_CELLS:
+				print(f"[{row}] res {RESET_CELLS}")
+				self.create_pulse2("Reset_V", WL_pulses, SEL_voltage, BL_voltage, RESET_CELLS, row)
+				RESET_CELLS = []
+			if READ_CELLS:
+				print(f"[{row}] read{READ_CELLS}")
+				self.create_pulse2("Read_V", WL_pulses, SEL_voltage, BL_voltage, READ_CELLS, row)
+				READ_CELLS = []
 
-			if any(SET_CELLS) or any(RESET_CELLS):
-				row = 0
-				for sets, reset in zip(SET_CELLS, RESET_CELLS):
-					if sets: self.create_pulse2("Set_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, sets, row)
-					if reset: self.create_pulse2("Reset_V", self.time_units, WL_pulses, SEL_voltage, BL_voltage, reset, row)
-
-					row += 1
-				SET_CELLS.clear()
-				RESET_CELLS.clear()	
-				read_flag = 0
-
-
-
-
-		
 		pulses_str = ""
 		c = 0
 		for i in range(0, self.rows):
@@ -409,6 +373,12 @@ class netlist_design(parameters):
 							fl.write(f"Read,{row},{i-2}\n")
 
 				fl.write('\n')
+				
+		with open(filename) as fl:
+			data = fl.read().rstrip('\n')
+		with open(filename, "w") as fl:
+			fl.write(data)
+
 
 
 	def sweep_to_string(self, sweep_params):
@@ -453,9 +423,10 @@ class netlist_design(parameters):
 		str_ckt += "ends XBAR_CELL\n\n"
 
 		k = 0
-		for i in range(0, self.columns):
-			str_instances += f"I{k} (r{i} c{i} g{i}) XBAR_CELL\n"
-			k += 1
+		for i in range(0, self.rows):
+			for j in range(0, self.columns):
+				str_instances += f"I{k} (r{i} c{j} g{i}) XBAR_CELL\n"
+				k += 1
 
 		str_pulses += "\n\n" + self.pulses_to_string(pulses)
 		#str_pulses += "\nV1 (c0  0) vsource dc=0\n\n\n"
