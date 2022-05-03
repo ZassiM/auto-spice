@@ -36,6 +36,7 @@ clean:
 	find . -name 'nosetest_results.txt' -delete
 	find . -name '*.ahdlSimDB' -type d | xargs rm -rf
 	cp sample/settings.json configs/settings.json
+	cp sample/row_input.csv configs/row_input.csv
 	echo "">>configs/row_input.csv
 	echo "">>configs/cell_input.csv
 
