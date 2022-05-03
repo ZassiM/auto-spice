@@ -23,12 +23,23 @@ ${venvdir}: requirements.txt
 clean:
 	find . -name '*.pyc' -delete
 	find . -name '*.yaml' -delete
+	find . -name '*.log' -delete
+	find . -name '*.srf' -delete
+	find . -name '*.raw' -type d | xargs rm -rf
+	find . -name '*.scs' -delete
 	find . -name '*~' -delete
 	find . -name '__pycache__' -type d | xargs rm -rf
 	find . -name '.ipynb_checkpoints' -type d | xargs rm -rf
 	find . -name '${venvdir}' -type d | xargs rm -rf
 	find . -name 'script.sh' -delete
 	find . -name 'nosetest_results.txt' -delete
+	find . -name '*.ahdlSimDB' -type d | xargs rm -rf
+	cp sample/settings.json configs/settings.json
+	echo "">configs/row_input.csv
+	echo "">configs/cell_input.csv
+
+
+
 
 # Perform automatic test on the Python after buiduing it
 nosetest_results.txt: ${venvdir} test test/*
