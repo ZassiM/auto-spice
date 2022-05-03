@@ -1,30 +1,38 @@
 {
-    "row_by_row": 1,
+    "input_type": 3,
 
     "sim_params": {
         "type" : "tran",
-        "max_step" : "1",
-        "step_time" : "100",
+        "max_step" : 1,
+        "step_time" : 1000,
+        "period" : 100,
         "time_units" : "u",
+        "vabstol" : 1e-6,
+        "iabstol" : 1e-12,
+        "temp" : 27,
+        "tnom" : 27,
+        "gmin" : 1e-12
+    },
+
+    "crossbar_params": {
         "memristor_model_file": "JART_VCM_v1b.va",
         "transistor_model_file" : "32nm_HP.pm",
-        "read_v": 0.2,
+        "transistor_width": 32,
+        "transistor_length": 32,
+        "read_v": 0.3,
         "set_v": 1,
         "reset_v": -1.5,
-        "gate_v": 1.6,
-        "Rth0" : 1.8e7
+        "gate_v": 1.3,
+        "ndiscmin" : 0,
+        "ndiscmax" : 0,
+        "ldet" : 0,
+        "rdet" : 0,
+        "Rth0" : 1.572e7
     },
 
     "gate_sweep": {
         "min_v" : 0,
         "max_v" : 0,
         "step_v" : 0.2
-    },
-
-    "var_bools": {
-        "ndiscmin" : 0,
-        "ndiscmax" : 0,
-        "ldet" : 0,
-        "rdet" : 0
     }
 }

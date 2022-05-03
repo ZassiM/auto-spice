@@ -91,14 +91,14 @@ class netlist_design(parameters):
 		insert_zeros = False
 		concatenated = False
 
-		if len(WL_pulses[0]) == 4:	
+		if len(WL_pulses[row]) == 4:	
 			start_time = self.period
 			if self.period > self.step_time: stop_time = 2*self.period - self.step_time
 			else:  stop_time = 2*self.step_time
 			insert_zeros = True
 
 		else:
-			start_time = int(WL_pulses[row-1][-2][:-1])+1 
+			start_time = int(WL_pulses[row][-2][:-1])+1 
 			stop_time = start_time + self.step_time * 2
 			concatenated = True	
 			
@@ -299,7 +299,7 @@ class netlist_design(parameters):
 		str_param += "ahdl_include " + "\"" + memristor_model_path + "\"" + "\n"
 		str_param += "include " + "\"" + transistor_model_path + "\"" + "\n" 
 		str_param += f"simulatorOptions options vabstol = {self.vabstol} iabstol = {self.iabstol} temp = {self.temp} tnom = {self.tnom} gmin = {self.gmin}\n"
-		str_param += f"trans {self.simulation_type} stop =  {self.simulation_stop_time} maxstep = {self.simulation_maxstep} errpreset=conservative\n"
+		str_param += f"trans {self.simulation_type} stop = 10000u  maxstep = {self.simulation_maxstep} errpreset=conservative\n"
 		str_param += f"saveOptions options save=all currents=all saveahdlvars=all\n"
 		str_param += f"parameters Read_V = {self.read_v} Set_V = {self.set_v} Reset_V = {self.reset_v} Gate_V = {self.gate_v} Transistor_Width = {self.trans_width}n Transistor_Length = {self.trans_length}n\n"
 		if memristor_params: str_param += "parameters " + self.parameters_list(param=memristor_params) + "\n"
