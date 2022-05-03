@@ -105,12 +105,14 @@ class netlist_design(parameters):
 
 		for t in range(start_time, stop_time, self.step_time):
 
-			for k in range(0,self.rows):
-				if k != row:
-					self.append_pulse(WL_pulses, k, '0', t, self.step_time)
 
 
 			if insert_zeros == False and concatenated == False:
+
+				for k in range(0,self.rows):
+					if k != row:
+						self.append_pulse(WL_pulses, k, '0', t, self.period)
+
 				self.append_pulse(WL_pulses, row, '0', t, self.period)
 
 				for k in range(0, self.columns):
@@ -124,6 +126,11 @@ class netlist_design(parameters):
 				
 
 			else:
+
+				for k in range(0,self.rows):
+					if k != row:
+						self.append_pulse(WL_pulses, k, '0', t, self.step_time)
+						
 				self.append_pulse(WL_pulses, row, pulse_vol, t, self.step_time)
 
 				for k in cells:
