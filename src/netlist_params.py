@@ -51,58 +51,6 @@ class parameters(object):
 
         return variablity_dict
 
-    def set_input_voltages(self, volt_r = [], volt_c = []):
-
-        self.input_type_r, self.input_type_c = [], []
-        self.volt_0_r, self.volt_0_c = [], []
-        self.volt_1_r, self.volt_1_c = [], []
-        self.time_period_r, self.time_period_c = [], []
-        self.pulse_width_r, self.pulse_width_c = [], []
-        self.rise_time_r, self.rise_time_c = [], []
-        self.fall_time_r, self.fall_time_c = [], []
-
-        def_vol = ["pulse", 0, 0, "0", "0", "0", "0"]
-
-        if self.rows < len(volt_r):
-            print(f"There are {len(volt_r)} voltage pulses but only {self.rows} rows -> {len(volt_r)-self.rows} voltage pulses are ignored.\n")
-            while self.rows != len(volt_r):
-                volt_r.pop()
-        
-        if self.columns < len(volt_c):
-            print(f"There are {len(volt_c)} voltage pulses but only {self.columns} columns -> {len(volt_c)-self.columns} voltage pulses are ignored.\n")
-            while self.columns != len(volt_c):
-                volt_c.pop()
-        
-        if self.rows > len(volt_r):
-            print(f"There are {self.rows} rows, but only {len(volt_r)} voltage pulses are defined -> {self.rows - len(volt_r)} null voltages are added.\n")
-            while self.rows != len(volt_r):
-                volt_r.append(def_vol)
-        
-        if self.columns > len(volt_c):
-            print(f"There are {self.columns} columns, but only {len(volt_c)} voltage pulses are defined -> {self.columns - len(volt_c)} null voltages are added.\n")
-            while self.columns != len(volt_c):
-                volt_c.append(def_vol)
-
-        for v in volt_r:
-            self.input_type_r.append(v[0])
-            self.volt_0_r.append(v[1])
-            self.volt_1_r.append(v[2])
-            self.time_period_r.append(v[3])
-            self.pulse_width_r.append(v[4])
-            self.rise_time_r.append(v[5])
-            self.fall_time_r.append(v[6])
-
-        for v in volt_c:
-            self.input_type_c.append(v[0])
-            self.volt_0_c.append(v[1])
-            self.volt_1_c.append(v[2])
-            self.time_period_c.append(v[3])
-            self.pulse_width_c.append(v[4])
-            self.rise_time_c.append(v[5])
-            self.fall_time_c.append(v[6])
-        
-        print("Voltage pulses correctly added.\n")
-
     def set_simulation_params(self, type_ = "tran", step_time = 100, period = 100, max_step = 1, time_unit = "u", vabstol = "1e-6", iabstol = "1e-12", temp = "27", tnom = "27", gmin = "1e-12", in_pulses_list = [], input_type = 0):
 
         self.simulation_type = type_
