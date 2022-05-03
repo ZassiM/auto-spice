@@ -14,7 +14,6 @@ class parameters(object):
         
         self.transistor_model = "nmos"
 
-
     def parameters_list(self, param, model_name="det", numerical_mode = True):
 
         self.device_parameters = ""
@@ -31,7 +30,6 @@ class parameters(object):
                     k=0
         
         return self.device_parameters
-
 
     def variablity_param(self, iteration):
 
@@ -105,7 +103,6 @@ class parameters(object):
         
         print("Voltage pulses correctly added.\n")
 
-
     def set_simulation_params(self, type_ = "tran", step_time = 100, period = 100, max_step = 1, time_unit = "u", vabstol = "1e-6", iabstol = "1e-12", temp = "27", tnom = "27", gmin = "1e-12", in_pulses_list = [], input_type = 0):
 
         self.simulation_type = type_
@@ -120,7 +117,7 @@ class parameters(object):
         
         print(f"Stop time: {self.simulation_stop_time}s, Step time: {self.step_time}{self.time_unit}s, Max step: {self.simulation_maxstep}s.\n")
 
-    def calculate_xbar_size(self, in_pulses_list = []):
+    def calculate_crossbar_size(self, in_pulses_list = []):
 
         rows = 0
         columns = 0
@@ -137,7 +134,6 @@ class parameters(object):
         
         print(f"Crossbar size: {self.rows} rows, {self.columns} columns.\n")
 
-
     def calculate_stop_time(self, in_pulses_list):
         max_stop_time = 0
         cnt = 0
@@ -153,7 +149,6 @@ class parameters(object):
 
         return max_stop_time * self.rows
 
-
     def set_crossbar_params(self, read_v = 0.2, set_v = -1.05, reset_v = 0.75, gate_v = 1, trans_length = 32, trans_width = 32):
 
         self.read_v = read_v
@@ -163,8 +158,6 @@ class parameters(object):
         self.trans_length = trans_length
         self.trans_width = trans_width
         
-        
-
     def set_variablity(self, Nmin=False, Nmax=False, rdet=False, ldet=False):
 
         self.vary_nmin = Nmin

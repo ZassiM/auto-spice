@@ -30,7 +30,6 @@ class netlist_design(parameters):
 			num_volt_source += 1
 		return voltages_name,voltage_source
 
-
 	def update_param(self, mean_sigma_param = {}, bools_var = {}):
 
 		var_param = "parameters "
@@ -51,6 +50,35 @@ class netlist_design(parameters):
 		
 		return var_param
 
+	def pulses_to_file(self, row_list, filename):
+
+		if not row_list:
+			print("Empty list")
+			return
+		
+		with open(filename,'w') as fl:
+			for s in row_list:
+				cmd = s[0]
+				row = s[1]
+
+				if cmd.lower() == "w":
+					for i in range(2, len(s)):
+						if s[i] == '0':
+							fl.write(f"Reset,{row},{i-2}\n")
+						else:
+							fl.write(f"Set,{row},{i-2},{s[i]}\n")
+
+				elif cmd.lower() == "r":
+					for i in range(2, len(s)):
+						if s[i] == '1':
+							fl.write(f"Read,{row},{i-2}\n")
+
+				fl.write('\n')
+				
+		with open(filename) as fl:
+			data = fl.read().rstrip('\n')
+		with open(filename, "w") as fl:
+			fl.write(data)
 
 	def append_pulse(self, pulse_list, idx, value, time, step):
 		pulse_list[idx].append(str(time) + self.time_unit)
@@ -114,7 +142,6 @@ class netlist_design(parameters):
 				insert_zeros = False
 				concatenated = False
 		
-
 	def pulses_to_string(self,in_pulses_list):
 
 		WL_pulses = [[] for _ in range(self.rows)]
@@ -246,39 +273,6 @@ class netlist_design(parameters):
 		
 		return pulses_str
 
-
-	def pulses_to_file(self, row_list, filename):
-
-		if not row_list:
-			print("Empty list")
-			return
-		
-		with open(filename,'w') as fl:
-			for s in row_list:
-				cmd = s[0]
-				row = s[1]
-
-				if cmd.lower() == "w":
-					for i in range(2, len(s)):
-						if s[i] == '0':
-							fl.write(f"Reset,{row},{i-2}\n")
-						else:
-							fl.write(f"Set,{row},{i-2},{s[i]}\n")
-
-				elif cmd.lower() == "r":
-					for i in range(2, len(s)):
-						if s[i] == '1':
-							fl.write(f"Read,{row},{i-2}\n")
-
-				fl.write('\n')
-				
-		with open(filename) as fl:
-			data = fl.read().rstrip('\n')
-		with open(filename, "w") as fl:
-			fl.write(data)
-
-
-
 	def sweep_to_string(self, sweep_params):
 
 		sweep_str = ""
@@ -293,7 +287,6 @@ class netlist_design(parameters):
 		sweep_str = sweep_str[0:-1] + f"]{{\n\ttran tran stop = {self.simulation_stop_time} errpreset=conservative maxstep={self.simulation_maxstep}\n}}"
 
 		return sweep_str
-
 
 	def gen_netlist(self,memristor_params= {}, pulses = [], sweep_params = [], file_name = "", memristor_model_path = "", transistor_model_path = ""):
 

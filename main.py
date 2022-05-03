@@ -65,27 +65,27 @@ with open(CONFIG_FILEPATH, 'r', encoding="utf-8") as file:
         step_gate = gate_sweep['step_v']
         sweep_params = [min_gate, max_gate, step_gate]		
 
-
 if input_type == 2 or input_type == 3:
+
     with open(ROW_INPUT_FILEPATH, 'r', encoding="utf-8") as file:
         reader = csv.reader(file)
         row_pulses_list = list(filter(None,reader))
         circuit.pulses_to_file(row_pulses_list, PULSES_INPUT_FILEPATH)
 
-with open(PULSES_INPUT_FILEPATH, 'r', encoding="utf-8") as file:
-    reader = csv.reader(file)
-    in_pulses_list = list(reader)
-    
 if input_type != 1 and input_type != 2 and input_type != 3:
     print("Invalid input type! Valid values: 1, 2, 3.\n")
     sys.exit()
 
+with open(PULSES_INPUT_FILEPATH, 'r', encoding="utf-8") as file:
+    reader = csv.reader(file)
+    in_pulses_list = list(reader)
+    
 if not in_pulses_list:
     print("No pulses input! Terminating program...")
     sys.exit()
 
 
-circuit.calculate_xbar_size(in_pulses_list)
+circuit.calculate_crossbar_size(in_pulses_list)
 circuit.set_crossbar_params(read_v, set_v, reset_v, gate_v, transistor_lenght, transistor_width)
 circuit.set_simulation_params(sim_type, step_time, period, max_step, time_unit, vabstol, iabstol, temp, tnom, gmin, in_pulses_list, input_type)
 
