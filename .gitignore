@@ -1,4 +1,5 @@
 *.scs
 ex.py
 .vscode
+.cadence
 src/__pycache__

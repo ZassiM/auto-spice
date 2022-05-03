@@ -25,10 +25,11 @@ clean:
 	find . -name '*.yaml' -delete
 	find . -name '*.log' -delete
 	find . -name '*.srf' -delete
-	find . -name '*.raw' -type d | xargs rm -rf
 	find . -name '*.scs' -delete
 	find . -name '*~' -delete
 	find . -name '__pycache__' -type d | xargs rm -rf
+	find . -name '*.raw' -type d | xargs rm -rf
+	find . -name '*.cadence' -type d | xargs rm -rf
 	find . -name '.ipynb_checkpoints' -type d | xargs rm -rf
 	find . -name '${venvdir}' -type d | xargs rm -rf
 	find . -name 'script.sh' -delete
