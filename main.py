@@ -8,9 +8,9 @@ import time
 import sys
 from src.netlist_gen import netlist_design
 
-CONFIG_FILEPATH = "config.json"
-PULSES_INPUT_FILEPATH = "cell_input.csv"
-ROW_INPUT_FILEPATH = "row_input.csv"
+CONFIG_FILEPATH = "configs/settings.json"
+CELL_INPUT_FILEPATH = "configs/cell_input.csv"
+ROW_INPUT_FILEPATH = "configs/row_input.csv"
 OUT_FILE_NAME = "netlist.scs"
 memristor_model_path = os.getcwd() + '/deps/memristor-models/'
 transistor_model_path = os.getcwd() + '/deps/transistor-models/'
@@ -23,9 +23,9 @@ memristor_params = {}
 print("\n***********************************************")
 
 if len(sys.argv) > 1 and str(sys.argv[1]) == 'sample':
-    CONFIG_FILEPATH = "sample/" + CONFIG_FILEPATH
-    PULSES_INPUT_FILEPATH = "sample/" + PULSES_INPUT_FILEPATH
-    ROW_INPUT_FILEPATH = "sample/" + ROW_INPUT_FILEPATH
+    CONFIG_FILEPATH = "sample/settings.json"
+    CELL_INPUT_FILEPATH = "sample/cell_input.csv"
+    ROW_INPUT_FILEPATH = "sample/row_input.csv"
     print("Sample used.\n")
 
 
@@ -70,13 +70,13 @@ if input_type == 2 or input_type == 3:
     with open(ROW_INPUT_FILEPATH, 'r', encoding="utf-8") as file:
         reader = csv.reader(file)
         row_pulses_list = list(filter(None,reader))
-        circuit.pulses_to_file(row_pulses_list, PULSES_INPUT_FILEPATH)
+        circuit.pulses_to_file(row_pulses_list, CELL_INPUT_FILEPATH)
 
 if input_type != 1 and input_type != 2 and input_type != 3:
     print("Invalid input type! Valid values: 1, 2, 3.\n")
     sys.exit()
 
-with open(PULSES_INPUT_FILEPATH, 'r', encoding="utf-8") as file:
+with open(CELL_INPUT_FILEPATH, 'r', encoding="utf-8") as file:
     reader = csv.reader(file)
     in_pulses_list = list(reader)
     
