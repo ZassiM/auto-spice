@@ -66,7 +66,6 @@ with open(CONFIG_FILEPATH, 'r', encoding="utf-8") as file:
         sweep_params = [min_gate, max_gate, step_gate]		
 
 if input_type == 2 or input_type == 3:
-
     with open(ROW_INPUT_FILEPATH, 'r', encoding="utf-8") as file:
         reader = csv.reader(file)
         row_pulses_list = list(filter(None,reader))
@@ -78,27 +77,29 @@ if input_type != 1 and input_type != 2 and input_type != 3:
 
 with open(CELL_INPUT_FILEPATH, 'r', encoding="utf-8") as file:
     reader = csv.reader(file)
-    in_pulses_list = list(reader)
+    cell_pulses_list = list(reader)
     
-if not in_pulses_list:
+if not cell_pulses_list:
     print("No pulses input! Terminating program...")
     sys.exit()
 
 
-circuit.calculate_crossbar_size(in_pulses_list)
+circuit.calculate_crossbar_size(cell_pulses_list)
 circuit.set_crossbar_params(read_v, set_v, reset_v, gate_v, transistor_lenght, transistor_width)
-circuit.set_simulation_params(sim_type, step_time, period, max_step, time_unit, vabstol, iabstol, temp, tnom, gmin, in_pulses_list, input_type)
+circuit.set_simulation_params(sim_type, step_time, period, max_step, time_unit, vabstol, iabstol, temp, tnom, gmin, cell_pulses_list, row_pulses_list, input_type)
 
 var_bools = circuit.set_variablity(Nmin = nmin_b, Nmax = nmax_b, ldet = ldet_b, rdet = rdet_b)	
 var_param = circuit.update_param(mean_sigma, var_bools)	
 
-circuit.gen_netlist(memristor_params, in_pulses_list, sweep_params, OUT_FILE_NAME, memristor_model_path, transistor_model_path)	
+circuit.gen_netlist(memristor_params, cell_pulses_list, sweep_params, OUT_FILE_NAME, memristor_model_path, transistor_model_path)	
 
-
+'''
 input("Press Enter to run the simulation.\n")
 print("Running simulation...")
 print("***********************************************\n")
 time.sleep(1.5)
 os.system(f"spectre {OUT_FILE_NAME}")
+'''
+
 
 

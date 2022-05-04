@@ -130,7 +130,7 @@ class netlist_design(parameters):
 				for k in range(0,self.rows):
 					if k != row:
 						self.append_pulse(WL_pulses, k, '0', t, self.step_time)
-						
+
 				self.append_pulse(WL_pulses, row, pulse_vol, t, self.step_time)
 
 				for k in cells:
@@ -149,7 +149,7 @@ class netlist_design(parameters):
 				insert_zeros = False
 				concatenated = False
 		
-	def pulses_to_string(self,in_pulses_list):
+	def pulses_to_string(self,cell_pulses_list):
 
 		WL_pulses = [[] for _ in range(self.rows)]
 		SEL_voltage = [[] for _ in range(self.rows)]
@@ -165,7 +165,7 @@ class netlist_design(parameters):
 
 		if self.input_type == 1:	#cell by cell with multiple state
 			
-			for s in in_pulses_list:
+			for s in cell_pulses_list:
 				if s:
 					row,column = int(s[1]), int(s[2])
 					column = [column]
@@ -185,7 +185,7 @@ class netlist_design(parameters):
 		elif self.input_type == 2: #row by row with multiple state
 			READ_CELLS = []
 
-			for s in in_pulses_list:
+			for s in cell_pulses_list:
 				if not s:
 					if READ_CELLS:
 						self.update_pulses("Read_V", WL_pulses, SEL_voltage, BL_voltage, READ_CELLS, row, None)
@@ -219,7 +219,7 @@ class netlist_design(parameters):
 			READ_CELLS = []
 
 
-			for s in in_pulses_list:
+			for s in cell_pulses_list:
 				if not s:
 					if SET_CELLS:
 						self.update_pulses("Set_V", WL_pulses, SEL_voltage, BL_voltage, SET_CELLS, row, None)
@@ -306,7 +306,7 @@ class netlist_design(parameters):
 		str_param += "ahdl_include " + "\"" + memristor_model_path + "\"" + "\n"
 		str_param += "include " + "\"" + transistor_model_path + "\"" + "\n" 
 		str_param += f"simulatorOptions options vabstol = {self.vabstol} iabstol = {self.iabstol} temp = {self.temp} tnom = {self.tnom} gmin = {self.gmin}\n"
-		str_param += f"trans {self.simulation_type} stop = 10000u  maxstep = {self.simulation_maxstep} errpreset=conservative\n"
+		str_param += f"trans {self.simulation_type} stop = {self.simulation_stop_time}  maxstep = {self.simulation_maxstep} errpreset=conservative\n"
 		str_param += f"saveOptions options save=all currents=all saveahdlvars=all\n"
 		str_param += f"parameters Read_V = {self.read_v} Set_V = {self.set_v} Reset_V = {self.reset_v} Gate_V = {self.gate_v} Transistor_Width = {self.trans_width}n Transistor_Length = {self.trans_length}n\n"
 		if memristor_params: str_param += "parameters " + self.parameters_list(param=memristor_params) + "\n"

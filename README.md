@@ -11,42 +11,50 @@ A set-up should be run with this following two commands. The first one deletes p
 
 ``` bash
 make
-source source_me.sh
+source script.sh
 python main.py sample
 ```
 
 ## Set-up
 
-### Configuration file
+### Settings file
 
-First of all the configuration file (config.json) should be edited:
+First of all the configuration file (settings.json inside configs folder) should be edited:
 #### Simulation parameters
-The first parameter (row_by_row) contains a bool which must be activated when the user wants to give row-by-row input to the rw_input.csv file. Otherwise, the user gives the input pulses one by one to each cell to the pulses.csv file.
-Then the user could change the type of simulation ("tran" is the default one), the max step, the step time, the period and the time units. The stop time is not specified since the script calculates it at run-time. 
+The first parameter (input type) allows to choose how the user configurates the crossbar. There are 3 options:
+1. (1) Cell by cell: the input pulses are given one by one for each cell on the cell_input.csv file; multiple memristor states are allowed by specifying different gate voltages;
+2. (2) Row by row: the input pulses are given for each row of the corssbar on the row_input.csv file; multiple memristor states are allowed by specifying different gate voltages;
+3. (3) Parallel binary operation: the same as the row access, but the Set and Reset operations are in parallel hence the memristors could only be set to High set or reset to Low set (binary)
+
+Then the user could change the type of simulation ("tran" is the default one), the max step, the step time, the period and the time units. The stop time is not specified since the script calculates it at run-time. The last 4 parameters could not be changed unless necessary.
 #### Crossbar parameter
 The memristor and transistor model names are specified, which can be found on the deps folder. 
-Define the Read, Set and Reset voltage levels given to the 1T1R cells. The Gate voltage level is used to select which row (or Word Line) to activate. Ndiscmin, Ndiscmax, ldet, rdet are booleans which allow to select which parameter/s will be affected by a cycle-to-cycle or device-to-device variability. Those parameters are the Minimum and the maximum oxygen concentration in the disc (Ndiscmin and Ndiscmax), the Radius of the filament (rvar) and Length of the disc (lvar). Finally, the user could add more parameters for the memristor. For example, the Rth0 parameter (thermal resistance of the Hafnium Oxide) can be changed and should be in the range between 1.5e7 and 2e7 in order to make the memristor function properly (different behaviours can be tested).
+Define the Read, Set and Reset voltage levels given to the 1T1R cells. The Gate voltage level is used to select which row (or Word Line) to activate and for having different memristor states. Ndiscmin, Ndiscmax, ldet, rdet are booleans which allow to select which parameter/s will be affected by a cycle-to-cycle or device-to-device variability. Those parameters are the Minimum and the maximum oxygen concentration in the disc (Ndiscmin and Ndiscmax), the Radius of the filament (rvar) and Length of the disc (lvar). Finally, the user could add more parameters for the memristor. For example, the Rth0 parameter (thermal resistance of the Hafnium Oxide) can be changed and should be in the range between 1.5e7 and 2e7 in order to make the memristor function properly (different behaviours can be tested).
 #### Gate sweep
 Those parameters allow the user to sweep the Gate voltage between a minimum and a maximum value, with a defined step. Those parameters will be ignored only when the min and max values are set to 0. In this case, the Gate voltage given previously is used.
 
 
-## Input pulses
+## Input pulses example
 
-### Direct cell configuration
-If the user decided to give the pulses directly (i.e when row_by_row is set to 0), then the inputs should be written to the pulses.csv file by specifying the operation and the cell index (case-insensitive). For example, if the cell in position 0,0 has to be read, while the cell in position 1,0 has to be set, the appropriate commands are:
+### Cell by cell 
+If the cell on position 0,0 (first row first column) has to be read, and the other in position 1,0 has to be set:
 1. Read,0,0
 1. Set,1,0
 Furthemore, if the cell should have a different gate voltage (for example multiple bit encoding), the voltage should be specified as third number. For example, if the cell 0,0 should have a gate voltage of 1.3 V, the command is:
 1. Set,0,0,1.3
-In the case the gate voltage is not specified, the gate voltage given on the config.json file will be used.
+In the case the gate voltage is not specified, the gate voltage given on the settings.json file will be used.
 
-### Row by row configuration
-If, insted, the row_by_row parameter is set to 1, the script will generate automatically the appropriate list of pulses to pulses.csv after reading the user-given row inputs in rw_input.csv file (case-insensitive). The format is as this: the first value is a character which is "w" if we want write, or "r" if we want to read. The second value is the row number. From the third value we specify 0 if the respective cell has to be reset, otherwise it has to be set with the specified gate voltage. For example, if we want to access the row 1 by setting the first cell with a gate voltage of 0.9 V and the third cell with a gate voltage of 1.3 V, and resetting the second and fourth cell, the appropriate command to write is:
+### Row by row 
+The format is as this: the first value is a character which is "w" if we want write, or "r" if we want to read. The second value is the row number. From the third value we specify 0 if the respective cell has to be reset, otherwise it has to be set with the specified gate voltage. For example, if we want to access the row 1 by setting the first cell with a gate voltage of 0.9 V and the third cell with a gate voltage of 1.3 V, and resetting the second and fourth cell, the appropriate command to write is:
 1. W,1,0.9,0,1.3,0
-The script will then convert this to a series of pulses.
+
+### Parallel binary
+The format is the same as of the row by row, but the gate voltage remains always the same in order in order to have binary states and to access the cells of the same row in parallel. All the set operation and the reset operation of the same row are done in parallel. For example, if we want to encode the number 10 and the number 7 in binary:
+1. W,0,1,0,1,0  
+2. W,1,0,1,1,1
 
 ## Simulation output
-To run the script with the customized configuration and input files:
+To run the script with the customized setting and input files:
 ``` bash
 python main.py
 ```
@@ -56,6 +64,3 @@ To visualize the output waveforms, run:
 viva -datadir netlist.raw
 ```
 The output current for the 1TR1 cell at position (0,0), for example, is I0:OE.
-
-## To-Do
-The script will automatically export the current and voltages output from the ViVa tool, in order to use the data to compute for example the energy and power consumption during certain operations.
